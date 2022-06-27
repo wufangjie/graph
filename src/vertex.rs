@@ -5,17 +5,17 @@ use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::fmt;
 
-#[derive(Eq)]
-pub struct Vertex<T: Eq + Hash>(Rc<RefCell<T>>);
+#[derive(Eq, Clone)]
+pub struct Vertex<T: Eq + Hash + Clone>(Rc<RefCell<T>>);
 
-impl<T: Eq + Hash> Vertex<T> {
+impl<T: Eq + Hash + Clone> Vertex<T> {
     pub fn new(x: T) -> Self {
         Self(Rc::new(RefCell::new(x)))
     }
 
-    pub fn clone(&self) -> Self {
-        Self(self.0.clone())
-    }
+    // pub fn clone(&self) -> Self {
+    //     Self(self.0.clone())
+    // }
 
     pub fn borrow(&self) -> Ref<'_, T> {
         self.0.borrow()
@@ -26,25 +26,25 @@ impl<T: Eq + Hash> Vertex<T> {
     }
 }
 
-impl<T: Eq + Hash> PartialEq for Vertex<T> {
+impl<T: Eq + Hash + Clone> PartialEq for Vertex<T> {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 }
 
-impl<T: Eq + Hash> Hash for Vertex<T> {
+impl<T: Eq + Hash + Clone> Hash for Vertex<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.borrow().hash(state);
     }
 }
 
-impl<T: Eq + Hash + fmt::Display> fmt::Display for Vertex<T> {
+impl<T: Eq + Hash + Clone + fmt::Display> fmt::Display for Vertex<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Vertex({})", self.0.borrow())
     }
 }
 
-impl<T: Eq + Hash + fmt::Debug> fmt::Debug for Vertex<T> {
+impl<T: Eq + Hash + Clone + fmt::Debug> fmt::Debug for Vertex<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Vertex({:?})", self.0.borrow())
     }

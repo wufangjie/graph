@@ -4,7 +4,7 @@ use std::hash::Hash;
 /// yield vertex as soon as dfs reach it
 struct DfsFirst<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     visited: Vec<bool>,
@@ -14,7 +14,7 @@ where
 
 impl<'a, T, W> DfsFirst<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     fn new(g: &'a Graph<T, W>, start: usize) -> Self {
@@ -28,7 +28,7 @@ where
 
 impl<'a, T, W> Iterator for DfsFirst<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     type Item = &'a Vertex<T>;
@@ -50,7 +50,7 @@ where
 
 impl<T, W> Graph<T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     fn dfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
@@ -68,7 +68,7 @@ where
 /// it is useful to topological sort and scc
 struct DfsLast<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     visited: Vec<i8>, // actually it is visit times
@@ -78,7 +78,7 @@ where
 
 impl<'a, T, W> DfsLast<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     fn new(g: &'a Graph<T, W>, start: usize) -> Self {
@@ -92,7 +92,7 @@ where
 
 impl<'a, T, W> Iterator for DfsLast<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     type Item = &'a Vertex<T>;
@@ -121,7 +121,7 @@ where
 
 impl<T, W> Graph<T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     fn dfs_last<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
@@ -140,7 +140,7 @@ where
 /// TODO: why dfs save memory than bfs (recursive dfs rather than stack based dfs?)
 struct Iddfs<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     visited: Vec<bool>,
@@ -153,7 +153,7 @@ where
 
 impl<'a, T, W> Iddfs<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     fn new(g: &'a Graph<T, W>, start: usize) -> Self {
@@ -173,7 +173,7 @@ where
 
 impl<'a, T, W> Iterator for Iddfs<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     type Item = &'a Vertex<T>;
@@ -207,7 +207,7 @@ where
 
 impl<T, W> Graph<T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     fn iddfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {

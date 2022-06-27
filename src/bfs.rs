@@ -4,7 +4,7 @@ use std::hash::Hash;
 
 struct Bfs<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     visited: Vec<bool>,
@@ -14,7 +14,7 @@ where
 
 impl<'a, T, W> Bfs<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     fn new(g: &'a Graph<T, W>, start: usize) -> Self {
@@ -29,7 +29,7 @@ where
 
 impl<'a, T, W> Iterator for Bfs<'a, T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     type Item = &'a Vertex<T>;
@@ -51,7 +51,7 @@ where
 
 impl<T, W> Graph<T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     fn bfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {

@@ -13,7 +13,7 @@ use std::ops::Index;
 #[derive(Debug)]
 pub struct Graph<T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     pub(crate) v_lst: Vec<Vertex<T>>,
@@ -23,7 +23,7 @@ where
 
 impl<T, W> Graph<T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     pub fn new() -> Self {
@@ -35,7 +35,7 @@ where
     }
 
     pub fn len(&self) -> usize {
-	self.v_lst.len()
+        self.v_lst.len()
     }
 
     pub fn try_insert(&mut self, v: &Vertex<T>) -> usize {
@@ -64,7 +64,43 @@ where
         self.e_lst[j].insert(i, w);
     }
 
-    // fn add_reverse_edge() {
+    pub fn edges(&self) -> Vec<(usize, usize, W)> {
+        self.e_lst
+            .iter()
+            .enumerate()
+            .flat_map(|(u, dct)| {
+                dct.iter()
+                    .map(|(v, w)| (u, *v, *w))
+                    .collect::<Vec<(usize, usize, W)>>()
+            })
+            .collect()
+
+        // let mut res = vec![];
+        // for (u, dct) in self.e_lst.iter().enumerate() {
+        //     for (&v, &w) in dct {
+        // 	res.push((u, v, w));
+        //     }
+        // }
+        // res
+    }
+
+    pub fn make_rev_graph(&self) -> Self {
+        let n = self.e_lst.len();
+
+        //HashMap<usize, W>
+        let mut e_lst = vec![HashMap::<usize, W>::new(); n];
+        for (u, v, w) in self.edges() {
+            e_lst[v].insert(u, w);
+        }
+
+        Self {
+            v_lst: self.v_lst.clone(),
+            v_map: self.v_map.clone(),
+            e_lst,
+        }
+    }
+
+    // fn add_reverse_edges() {
     // }
 }
 
@@ -119,7 +155,7 @@ macro_rules! from_weighted_edges {
 /// Indexing: you can use g[i] to index vertex
 impl<T, W> Index<usize> for Graph<T, W>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
     type Output = Vertex<T>;
@@ -167,6 +203,9 @@ mod tests {
             h: i;
             i: h
         );
+
+        //dbg!(&g1.edges());
+        //dbg!(&g1.make_rev_graph());
         //dbg!(&g1);
         // indexing
         assert_eq!(g1[0], a);
