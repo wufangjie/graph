@@ -1,0 +1,31 @@
+* An easy to use rust graph algorithm implement
+** there is at most one edge from one vertex to another (can be the same)
+
+* Done
+** core data structure
+** easy to use/test macros
+** dfs
+** bfs
+
+* Todo
+** iddfs (Iterative Deepening Depth-First Search)
+** DAG's topological sort
+*** dfs
+*** reference count
+** minimum spin tree
+*** prim
+*** kruskal
+** SCC (Strongly Connected Components)
+** single source shortest path
+*** bellman ford
+*** dijkstra
+*** A*
+** multiple sources shortest path
+*** johnson
+*** floyd warshall
+** maxflow
+*** bipartite matching
+*** edge disjoint paths
+*** vertex disjoint paths
+*** maxflow
+*** min-cost max-flow
