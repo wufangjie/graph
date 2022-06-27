@@ -21,6 +21,17 @@ where
     pub(crate) e_lst: Vec<HashMap<usize, W>>, // edges
 }
 
+
+impl<T, W> Default for Graph<T, W>
+where
+    T: Eq + Hash + Clone,
+    W: Clone + Copy + Default,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
@@ -175,7 +186,7 @@ mod tests {
     fn make_g2() -> Graph<&'static str, i32> {
         make_vertices!(a, b, c, d, e, f, g, h, i);
         // TODO: maybe keep alphabet order?
-        let g2 = from_weighted_edges!(
+        from_weighted_edges!(
             a: (b, 4), (h, 8);
             b: (c, 8), (h, 11);
             c: (d, 7), (f, 4), (i, 2);
@@ -184,8 +195,7 @@ mod tests {
             f: (g, 2);
             g: (h, 1), (i, 6);
             h: (i, 7)
-        );
-        g2
+        )
     }
 
     #[test]
