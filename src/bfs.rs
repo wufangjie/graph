@@ -2,7 +2,7 @@ use crate::{Graph, Vertex};
 use std::collections::VecDeque;
 use std::hash::Hash;
 
-struct Bfs<'a, T, W>
+struct BfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -12,7 +12,7 @@ where
     g: &'a Graph<T, W>,
 }
 
-impl<'a, T, W> Bfs<'a, T, W>
+impl<'a, T, W> BfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -27,7 +27,7 @@ where
     }
 }
 
-impl<'a, T, W> Iterator for Bfs<'a, T, W>
+impl<'a, T, W> Iterator for BfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -54,9 +54,9 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    fn bfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
+    pub fn bfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
         if let Some(&i) = self.v_map.get(start) {
-            Bfs::new(self, i)
+            BfsIter::new(self, i)
         } else {
             panic!("Vertex not in this graph");
         }
