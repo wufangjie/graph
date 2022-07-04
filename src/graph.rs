@@ -1,10 +1,11 @@
 /// This module impl graph's basic data structures and some useful Macros
 /// Struct:
-/// Graph<T, W>, NOTE: Graph<T, ()> is
+/// Graph<T, W>, Graph<T, ()>
+/// NOTE: use Graph<T, ()> to present unweighted graph (no space wasting)
 /// Macros:
-/// 0. make_vertices
 /// 1. from_edges_nw
 /// 2. from_edges_ww
+
 use crate::Vertex;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -20,7 +21,6 @@ where
     pub(crate) v_map: HashMap<Vertex<T>, usize>,
     pub(crate) e_lst: Vec<HashMap<usize, W>>, // edges
 }
-
 
 impl<T, W> Default for Graph<T, W>
 where
@@ -47,6 +47,10 @@ where
 
     pub fn len(&self) -> usize {
         self.v_lst.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+	self.len() == 0
     }
 
     pub fn try_insert(&mut self, v: &Vertex<T>) -> usize {
@@ -95,24 +99,27 @@ where
         // res
     }
 
-    pub fn make_rev_graph(&self) -> Self {
-        let n = self.e_lst.len();
-
-        //HashMap<usize, W>
-        let mut e_lst = vec![HashMap::<usize, W>::new(); n];
+    pub fn get_rev_edges(&self) -> Vec<HashMap<usize, W>> {
+        let mut e_lst = vec![HashMap::<usize, W>::new(); self.len()];
         for (u, v, w) in self.edges() {
             e_lst[v].insert(u, w);
         }
+        e_lst
+    }
 
-        Self {
-            v_lst: self.v_lst.clone(),
-            v_map: self.v_map.clone(),
-            e_lst,
+    fn add_rev_edges(&mut self) {
+        for (u, v, w) in self.edges() {
+            self.e_lst[v].insert(u, w);
         }
     }
 
-    // fn add_reverse_edges() {
-    // }
+    pub fn make_rev_graph(&self) -> Self {
+        Self {
+            v_lst: self.v_lst.clone(),
+            v_map: self.v_map.clone(),
+            e_lst: self.get_rev_edges(),
+        }
+    }
 }
 
 // fn safe_update<T: Eq + Hash>(
@@ -202,7 +209,7 @@ mod tests {
     fn test_gen() {
         // make unweighted graph
         make_vertices!(a, b, c, d, e, f, g, h, i);
-        let g1 = from_unweighted_edges!(
+        let mut g1 = from_unweighted_edges!(
             a: b, c;
             b: c, e, i;
             c: d;
@@ -216,6 +223,8 @@ mod tests {
 
         //dbg!(&g1.edges());
         //dbg!(&g1.make_rev_graph());
+        g1.add_rev_edges();
+        dbg!(&g1);
         //dbg!(&g1);
         // indexing
         assert_eq!(g1[0], a);
