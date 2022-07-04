@@ -1,9 +1,9 @@
 /// basic data structure: Vertex
-
+/// macro: make_vertices
 use std::cell::{Ref, RefCell, RefMut};
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
-use std::fmt;
 
 #[derive(Eq, Clone)]
 pub struct Vertex<T: Eq + Hash + Clone>(Rc<RefCell<T>>);
