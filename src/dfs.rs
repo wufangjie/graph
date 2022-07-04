@@ -2,7 +2,7 @@ use crate::{Graph, Vertex};
 use std::hash::Hash;
 
 /// yield vertex as soon as dfs reach it
-struct DfsFirst<'a, T, W>
+struct DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -12,7 +12,7 @@ where
     g: &'a Graph<T, W>,
 }
 
-impl<'a, T, W> DfsFirst<'a, T, W>
+impl<'a, T, W> DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -26,7 +26,7 @@ where
     }
 }
 
-impl<'a, T, W> Iterator for DfsFirst<'a, T, W>
+impl<'a, T, W> Iterator for DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -53,92 +53,23 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    fn dfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
+    pub fn dfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
         // + 'a
         if let Some(&i) = self.v_map.get(start) {
-            DfsFirst::new(self, i)
+            DfsIter::new(self, i)
         } else {
             panic!("Vertex not in this graph");
         }
     }
 }
 
-/// yield vertex after all it's out-degree vertices been visited
-/// this implement can processs graph which are not DAG without a dead loop
-/// it is useful to topological sort and scc
-struct DfsLast<'a, T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
-{
-    visited: Vec<i8>, // actually it is visit times
-    stack: Vec<usize>,
-    g: &'a Graph<T, W>,
-}
-
-impl<'a, T, W> DfsLast<'a, T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
-{
-    fn new(g: &'a Graph<T, W>, start: usize) -> Self {
-        let n = g.v_lst.len();
-        let mut visited = vec![0; n];
-        visited[start] = 1;
-        let stack = vec![start];
-        Self { visited, stack, g }
-    }
-}
-
-impl<'a, T, W> Iterator for DfsLast<'a, T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
-{
-    type Item = &'a Vertex<T>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            if let Some(u) = self.stack.pop() {
-                if self.visited[u] == 2 {
-                    return Some(&self.g[u]);
-                } else {
-                    self.stack.push(u);
-                    self.visited[u] += 1;
-                    for &v in self.g.e_lst[u].keys() {
-                        if self.visited[v] == 0 {
-                            self.visited[v] = 1;
-                            self.stack.push(v);
-                        }
-                    }
-                }
-            } else {
-                return None;
-            }
-        }
-    }
-}
-
-impl<T, W> Graph<T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
-{
-    fn dfs_last<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
-        if let Some(&i) = self.v_map.get(start) {
-            DfsLast::new(self, i)
-        } else {
-            panic!("Vertex not in this graph");
-        }
-    }
-}
 
 /// Iterative Deepening Depth-First Search
 /// There is really only one situation where IDDFS would be preferable over BFS:
 /// when searching a huge acyclic graph
 /// (saving a significant amount of memory, with little or no asymptotic slowdown)
 /// TODO: why dfs save memory than bfs (recursive dfs rather than stack based dfs?)
-struct Iddfs<'a, T, W>
+struct IddfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -151,7 +82,7 @@ where
     depth: usize,
 }
 
-impl<'a, T, W> Iddfs<'a, T, W>
+impl<'a, T, W> IddfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -171,7 +102,7 @@ where
     }
 }
 
-impl<'a, T, W> Iterator for Iddfs<'a, T, W>
+impl<'a, T, W> Iterator for IddfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
@@ -210,9 +141,9 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    fn iddfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
+    pub fn iddfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
         if let Some(&i) = self.v_map.get(start) {
-            Iddfs::new(self, i)
+            IddfsIter::new(self, i)
         } else {
             panic!("Start vertex not in this graph");
         }
@@ -242,11 +173,6 @@ mod tests {
         //dbg!(&g1);
         // indexing
         for v in g1.dfs(&a) {
-            dbg!(v);
-        }
-
-        println!("{:->20}", "");
-        for v in g1.dfs_last(&a) {
             dbg!(v);
         }
 

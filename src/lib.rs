@@ -8,6 +8,7 @@ pub mod dfs;
 
 pub mod bfs;
 
+pub mod topo_sort;
 
 #[cfg(test)]
 mod tests {
