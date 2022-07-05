@@ -2,17 +2,17 @@
 ** there is at most one edge from one vertex to another (can be the same)
 
 * Done
-| core data structure     |          |
-| easy to use/test macros |          |
-| dfs                     | dfs      |
-|                         | dfs_last |
-|                         | iddfs    |
-|                         |          |
-| bfs                     |          |
+| core data structure     |                 |
+| easy to use/test macros |                 |
+| dfs                     | dfs             |
+|                         | dfs_last        |
+|                         | iddfs           |
+|                         |                 |
+| bfs                     |                 |
+| DAG's topological sort  | dfs             |
+|                         | reference count |
 
 * Todo
-| DAG's topological sort              | dfs                   |
-|                                     | reference count       |
 | minimum spanning tree               | prim                  |
 |                                     | kruskal               |
 | strongly connected compoments (SCC) |                       |

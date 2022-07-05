@@ -10,6 +10,8 @@ pub mod bfs;
 
 pub mod topo_sort;
 
+pub mod scc;
+
 #[cfg(test)]
 mod tests {
     #[test]
