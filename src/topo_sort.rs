@@ -8,7 +8,7 @@ where
 {
     /// return partial topological order
     /// i.e. res.len() maybe not equal to v_lst.len()
-    fn topo_sort(&self) -> Vec<&Vertex<T>> {
+    pub fn topo_sort(&self) -> Vec<usize> {
         let n = self.len();
         let mut count = Vec::with_capacity(n);
         let mut stack = vec![];
@@ -30,13 +30,9 @@ where
                 }
             }
         }
-
-        res.into_iter()
-            .map(|i| &self[i])
-            .collect::<Vec<&Vertex<T>>>()
+        res
     }
 }
-
 
 impl<T, W> Graph<T, W>
 where
@@ -48,13 +44,13 @@ where
     /// return: since we always need the entire order, Vec is better than Iterator
     /// cycle: this implement can processs graph which are not DAG (without dead loop)
     /// this implement only promise: **at least one vertex** in scc occur after all scc's out degrees
-    pub fn topo_sort_dfs<'a>(&'a self) -> Vec<&Vertex<T>> {
+    pub fn topo_sort_dfs(&self) -> Vec<usize> {
         let n = self.len();
         let mut stack = vec![0];
         let mut visited = vec![0; n];
         let mut count = 0;
         let mut index = 0;
-        let mut res: Vec<&Vertex<T>> = Vec::with_capacity(n);
+        let mut res = Vec::with_capacity(n);
 
         loop {
             if let Some(u) = stack.pop() {
@@ -62,7 +58,7 @@ where
                     visited[u] += 1;
                     if visited[u] == 2 {
                         count += 1;
-                        res.push(&self[u]);
+                        res.push(u);
                     } else {
                         stack.push(u);
                         for &v in self.e_lst[u].keys() {
@@ -72,15 +68,13 @@ where
                         }
                     }
                 }
+            } else if count == n {
+                return res;
             } else {
-                if count == n {
-                    return res;
-                } else {
-                    while visited[index] != 0 {
-                        index += 1;
-                    }
-                    stack.push(index);
+                while visited[index] != 0 {
+                    index += 1;
                 }
+                stack.push(index);
             }
         }
     }
@@ -105,7 +99,9 @@ mod tests {
             g: (h, 1), (i, 6);
             h: (i, 7)
         );
-        dbg!(g2.topo_sort());
+        for v in g2.topo_sort() {
+            dbg!(&g2[v]);
+        }
     }
 
     #[test]
@@ -124,7 +120,7 @@ mod tests {
         );
 
         for v in g1.topo_sort_dfs() {
-            dbg!(v);
+            dbg!(&g1[v]);
         }
     }
 }
