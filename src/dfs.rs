@@ -31,7 +31,7 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    type Item = &'a Vertex<T>;
+    type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(u) = self.stack.pop() {
@@ -41,7 +41,7 @@ where
                     self.stack.push(v);
                 }
             }
-            Some(&self.g[u])
+            Some(u)
         } else {
             None
         }
@@ -53,8 +53,10 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    pub fn dfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
-        // + 'a
+    /// NOTE: return index of vertices is promgram friendly
+    /// just use graph[index] for human friendly read
+    /// + 'a means: all lifetime paremeters of returned type (i.e. DfsIter) outlive 'a
+    pub fn dfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = usize> + 'a {
         if let Some(&i) = self.v_map.get(start) {
             DfsIter::new(self, i)
         } else {
@@ -63,12 +65,10 @@ where
     }
 }
 
-
 /// Iterative Deepening Depth-First Search
 /// There is really only one situation where IDDFS would be preferable over BFS:
 /// when searching a huge acyclic graph
 /// (saving a significant amount of memory, with little or no asymptotic slowdown)
-/// TODO: why dfs save memory than bfs (recursive dfs rather than stack based dfs?)
 struct IddfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
@@ -78,7 +78,7 @@ where
     stack: Vec<(usize, usize)>,
     g: &'a Graph<T, W>,
     start: usize,
-    count: usize, // all j < i have been processed
+    count: usize,
     depth: usize,
 }
 
@@ -107,7 +107,7 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    type Item = &'a Vertex<T>;
+    type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
@@ -120,17 +120,16 @@ where
                 if !self.visited[u] {
                     self.visited[u] = true;
                     self.count += 1;
-                    return Some(&self.g[u]);
+                    return Some(u);
                 }
+            } else if self.count == self.g.len() {
+                // NOTE: IMPORTANT
+                // we must make sure we can traversal all vertices from `start`
+                // otherwise, we will end up with a dead loop
+                return None;
             } else {
-                // NOTE: we must make sure we can traversal the graph from start
-                // otherwise, we will end up with dead loop
-                if self.count == self.g.len() {
-                    return None;
-                } else {
-                    self.depth += 1;
-                    self.stack.push((self.start, self.depth))
-                }
+                self.depth += 1;
+                self.stack.push((self.start, self.depth))
             }
         }
     }
@@ -141,7 +140,7 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    pub fn iddfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
+    pub fn iddfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = usize> + 'a {
         if let Some(&i) = self.v_map.get(start) {
             IddfsIter::new(self, i)
         } else {
@@ -153,7 +152,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{from_unweighted_edges, from_weighted_edges, make_vertices};
+    use crate::{from_unweighted_edges, make_vertices};
 
     #[test]
     fn test_dfs() {
@@ -173,12 +172,12 @@ mod tests {
         //dbg!(&g1);
         // indexing
         for v in g1.dfs(&a) {
-            dbg!(v);
+            dbg!(&g1[v]);
         }
 
         println!("{:->20}", "");
         for v in g1.iddfs(&a) {
-            dbg!(v);
+            dbg!(&g1[v]);
         }
         println!("{:->20}", "");
     }

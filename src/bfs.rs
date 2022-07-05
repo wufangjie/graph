@@ -32,7 +32,7 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    type Item = &'a Vertex<T>;
+    type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(u) = self.queue.pop_front() {
@@ -42,7 +42,7 @@ where
                     self.queue.push_back(v);
                 }
             }
-            Some(&self.g[u])
+            Some(u)
         } else {
             None
         }
@@ -54,7 +54,7 @@ where
     T: Eq + Hash + Clone,
     W: Clone + Copy + Default,
 {
-    pub fn bfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = &'a Vertex<T>> {
+    pub fn bfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = usize> + 'a {
         if let Some(&i) = self.v_map.get(start) {
             BfsIter::new(self, i)
         } else {
@@ -66,7 +66,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{from_unweighted_edges, from_weighted_edges, make_vertices};
+    use crate::{from_unweighted_edges, make_vertices};
 
     #[test]
     fn test_bfs() {
@@ -85,7 +85,7 @@ mod tests {
         );
 
         for v in g1.bfs(&a) {
-            dbg!(v);
+            dbg!(&g1[v]);
         }
     }
 }
