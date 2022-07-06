@@ -12,11 +12,4 @@ pub mod topo_sort;
 
 pub mod scc;
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
-}
+pub mod kruskal;

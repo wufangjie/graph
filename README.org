@@ -11,10 +11,12 @@
 | bfs                     |                 |
 | DAG's topological sort  | dfs             |
 |                         | reference count |
+| minimum spanning tree   | kruskal         |
+|                         |                 |
+
 
 * Todo
 | minimum spanning tree               | prim                  |
-|                                     | kruskal               |
 | strongly connected compoments (SCC) |                       |
 | single source shortest path         | bellman ford          |
 |                                     | dijkstra              |
