@@ -1,4 +1,4 @@
-use crate::{Graph, Vertex};
+use crate::Graph;
 use std::hash::Hash;
 
 impl<T, W> Graph<T, W>
@@ -83,6 +83,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Vertex;
     use crate::{from_unweighted_edges, from_weighted_edges, make_vertices};
 
     #[test]
