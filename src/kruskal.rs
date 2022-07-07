@@ -56,8 +56,10 @@ impl DisjointSet {
 impl<'a, T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default + PartialOrd + std::fmt::Debug,
+    W: Clone + Copy + Default + PartialOrd, // + std::fmt::Debug,
 {
+    /// NOTE: kruskal can process directed graph (which will be more efficient)
+    /// since we need the spanning tree, return Vec rather Iterator
     pub fn kruskal(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
         let mut heap = Heap::from(
             self.edges()
