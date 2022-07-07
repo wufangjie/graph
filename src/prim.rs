@@ -43,7 +43,7 @@ where
                     self.heap.push((w, v, u));
                 }
                 if u != 0 {
-                    return Some((w, u, v));
+                    return Some((w, u, v)); // NOTE: v, w is ok
                 }
             }
         }
@@ -93,7 +93,7 @@ mod tests {
             b: (c, 8), (h, 11);
             c: (d, 7), (f, 4), (i, 2);
             d: (e, 9), (f, 14);
-            e: (f, 14);
+            e: (f, 10);
             f: (g, 2);
             g: (h, 1), (i, 6);
             h: (i, 7)
