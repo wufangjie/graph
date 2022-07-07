@@ -5,13 +5,12 @@
 /// Macros:
 /// 1. from_edges_nw
 /// 2. from_edges_ww
-
 use crate::Vertex;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::Index;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Graph<T, W>
 where
     T: Eq + Hash + Clone,
@@ -50,7 +49,7 @@ where
     }
 
     pub fn is_empty(&self) -> bool {
-	self.len() == 0
+        self.len() == 0
     }
 
     pub fn try_insert(&mut self, v: &Vertex<T>) -> usize {
@@ -107,7 +106,7 @@ where
         e_lst
     }
 
-    fn add_rev_edges(&mut self) {
+    pub fn add_rev_edges(&mut self) {
         for (u, v, w) in self.edges() {
             self.e_lst[v].insert(u, w);
         }
