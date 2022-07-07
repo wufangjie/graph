@@ -13,3 +13,5 @@ pub mod topo_sort;
 pub mod scc;
 
 pub mod kruskal;
+
+pub mod prim;
