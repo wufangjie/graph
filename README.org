@@ -14,10 +14,10 @@
 | strongly connected compoments (SCC) |                 |
 | minimum spanning tree               | kruskal         |
 |                                     | prim            |
+| single source shortest path         | dijkstra        |
 
 * Todo
 | single source shortest path         | bellman ford          |
-|                                     | dijkstra              |
 |                                     | A*                    |
 | multiple sources shortest path      | johnson               |
 |                                     | floyd warshall        |

@@ -15,3 +15,5 @@ pub mod scc;
 pub mod kruskal;
 
 pub mod prim;
+
+pub mod dijkstra;
