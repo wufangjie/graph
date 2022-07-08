@@ -15,10 +15,10 @@
 | minimum spanning tree               | kruskal         |
 |                                     | prim            |
 | single source shortest path         | dijkstra        |
+|                                     | A*              |
 
 * Todo
 | single source shortest path         | bellman ford          |
-|                                     | A*                    |
 | multiple sources shortest path      | johnson               |
 |                                     | floyd warshall        |
 | maxflow (augment path)              | bipartite matching    |
