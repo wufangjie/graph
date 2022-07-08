@@ -12,7 +12,6 @@ where
     edges: &'a Vec<HashMap<usize, W>>,
     used: Vec<bool>,
     heap: Heap<(W, usize, usize)>,
-    start: usize, // need this to skip the first output? is there a better way?
 }
 
 impl<'a, W> DijkstraIter<'a, W>
@@ -20,15 +19,13 @@ where
     W: Clone + Copy + Default + PartialOrd + Add<Output = W>,
 {
     fn new(edges: &'a Vec<HashMap<usize, W>>, start: usize) -> Self {
-        let n = edges.len();
         let mut heap = Heap::new();
-        heap.push((Default::default(), start, start)); // always from 0, it's ok
-        Self {
-            edges,
-            used: vec![false; n],
-            heap,
-            start,
+        for (&v, &w) in &edges[start] {
+            heap.push((w, v, start));
         }
+        let mut used = vec![false; edges.len()];
+        used[start] = true;
+        Self { edges, used, heap }
     }
 }
 
@@ -45,9 +42,7 @@ where
                 for (&v, &w) in &self.edges[u] {
                     self.heap.push((d + w, v, u));
                 }
-                if u != self.start {
-                    return Some((d, u, v));
-                }
+                return Some((d, u, v));
             }
         }
         None

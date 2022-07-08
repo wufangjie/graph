@@ -18,14 +18,14 @@ where
     W: Clone + Copy + Default + PartialOrd,
 {
     fn new(edges: &'a Vec<HashMap<usize, W>>) -> Self {
-        let n = edges.len();
+        let start = 0;
         let mut heap = Heap::new();
-        heap.push((Default::default(), 0, 0)); // always from 0, it's ok
-        Self {
-            edges,
-            used: vec![false; n],
-            heap,
+        for (&v, &w) in &edges[start] {
+            heap.push((w, v, start));
         }
+        let mut used = vec![false; edges.len()];
+        used[start] = true;
+        Self { edges, used, heap }
     }
 }
 
@@ -42,9 +42,7 @@ where
                 for (&v, &w) in &self.edges[u] {
                     self.heap.push((w, v, u));
                 }
-                if u != 0 {
-                    return Some((w, u, v)); // NOTE: v, w is ok
-                }
+                return Some((w, u, v)); // NOTE: v, w is ok
             }
         }
         None
