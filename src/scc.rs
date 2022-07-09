@@ -4,7 +4,7 @@ use std::hash::Hash;
 impl<T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     fn scc(&self) -> Vec<Vec<&Vertex<T>>> {
         let n = self.len();
@@ -31,7 +31,7 @@ where
 struct DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     visited: &'a mut Vec<bool>,
     stack: Vec<usize>,
@@ -41,7 +41,7 @@ where
 impl<'a, T, W> DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     fn new(g: &'a Graph<T, W>, start: usize, visited: &'a mut Vec<bool>) -> Self {
         visited[start] = true;
@@ -53,7 +53,7 @@ where
 impl<'a, T, W> Iterator for DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     type Item = usize;
 

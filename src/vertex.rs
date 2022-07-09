@@ -50,6 +50,13 @@ impl<T: Eq + Hash + Clone + fmt::Debug> fmt::Debug for Vertex<T> {
     }
 }
 
+// impl<T: Eq + Hash + Clone + fmt::Debug> Deref for Vertex<T> {
+//     type Target = T;
+//     fn deref(&self) -> &Self::Target {
+// 	&self.0.borrow()
+//     }
+// }
+
 /// As far as I know, use &str to present a vertex is good enough
 /// so I provide this specific macro
 #[macro_export]

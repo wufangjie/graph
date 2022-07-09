@@ -14,7 +14,7 @@ use std::ops::Index;
 pub struct Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     pub(crate) v_lst: Vec<Vertex<T>>,
     pub(crate) v_map: HashMap<Vertex<T>, usize>,
@@ -24,7 +24,7 @@ where
 impl<T, W> Default for Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     fn default() -> Self {
         Self::new()
@@ -34,7 +34,7 @@ where
 impl<T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     pub fn new() -> Self {
         Self {
@@ -173,7 +173,7 @@ macro_rules! from_weighted_edges {
 impl<T, W> Index<usize> for Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     type Output = Vertex<T>;
 

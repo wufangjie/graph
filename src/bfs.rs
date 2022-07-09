@@ -5,7 +5,7 @@ use std::hash::Hash;
 struct BfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     visited: Vec<bool>,
     queue: VecDeque<usize>,
@@ -15,7 +15,7 @@ where
 impl<'a, T, W> BfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     fn new(g: &'a Graph<T, W>, start: usize) -> Self {
         let n = g.v_lst.len();
@@ -30,7 +30,7 @@ where
 impl<'a, T, W> Iterator for BfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     type Item = usize;
 
@@ -52,7 +52,7 @@ where
 impl<T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     pub fn bfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = usize> + 'a {
         if let Some(&i) = self.v_map.get(start) {

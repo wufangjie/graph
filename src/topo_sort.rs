@@ -4,7 +4,7 @@ use std::hash::Hash;
 impl<T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     /// return partial topological order
     /// i.e. res.len() maybe not equal to v_lst.len()
@@ -37,7 +37,7 @@ where
 impl<T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     /// It's a special kind of DFS, which yield vertex after all it's out degrees been visited
     /// why in this module: it will only be used in topological sort (and scc)

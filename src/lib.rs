@@ -17,3 +17,5 @@ pub mod kruskal;
 pub mod prim;
 
 pub mod dijkstra;
+
+pub mod a_star;

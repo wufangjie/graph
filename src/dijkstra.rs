@@ -7,7 +7,7 @@ use utils::Heap;
 
 struct DijkstraIter<'a, W>
 where
-    W: Clone + Copy + Default + PartialOrd + Add<Output = W>,
+    W: Clone + Copy + PartialOrd + Add<Output = W>,
 {
     edges: &'a Vec<HashMap<usize, W>>,
     used: Vec<bool>,
@@ -16,7 +16,7 @@ where
 
 impl<'a, W> DijkstraIter<'a, W>
 where
-    W: Clone + Copy + Default + PartialOrd + Add<Output = W>,
+    W: Clone + Copy + PartialOrd + Add<Output = W>,
 {
     fn new(edges: &'a Vec<HashMap<usize, W>>, start: usize) -> Self {
         let mut heap = Heap::new();
@@ -31,7 +31,7 @@ where
 
 impl<'a, W> Iterator for DijkstraIter<'a, W>
 where
-    W: Clone + Copy + Default + PartialOrd + Add<Output = W>,
+    W: Clone + Copy + PartialOrd + Add<Output = W>,
 {
     type Item = (W, usize, usize);
 
@@ -52,7 +52,7 @@ where
 impl<'a, T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default + PartialOrd + Add<Output = W>, // + std::fmt::Debug,
+    W: Clone + Copy + PartialOrd + Add<Output = W>,
 {
     /// the difference between dijstra and prim's algorithm:
     /// 1. dijstra need to specify a start vertex, while prim needn't

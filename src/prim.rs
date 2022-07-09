@@ -6,7 +6,7 @@ use utils::Heap;
 
 struct PrimIter<'a, W>
 where
-    W: Clone + Copy + Default + PartialOrd,
+    W: Clone + Copy + PartialOrd,
 {
     edges: &'a Vec<HashMap<usize, W>>,
     used: Vec<bool>,
@@ -15,7 +15,7 @@ where
 
 impl<'a, W> PrimIter<'a, W>
 where
-    W: Clone + Copy + Default + PartialOrd,
+    W: Clone + Copy + PartialOrd,
 {
     fn new(edges: &'a Vec<HashMap<usize, W>>) -> Self {
         let start = 0;
@@ -31,7 +31,7 @@ where
 
 impl<'a, W> Iterator for PrimIter<'a, W>
 where
-    W: Clone + Copy + Default + PartialOrd,
+    W: Clone + Copy + PartialOrd,
 {
     type Item = (W, usize, usize);
 
@@ -52,7 +52,7 @@ where
 impl<'a, T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default + PartialOrd, // + std::fmt::Debug,
+    W: Clone + Copy + PartialOrd, // + std::fmt::Debug,
 {
     /// run prim on directed graph
     /// it is only can be used on the graph,

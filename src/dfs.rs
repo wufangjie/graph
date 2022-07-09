@@ -5,7 +5,7 @@ use std::hash::Hash;
 struct DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     visited: Vec<bool>,
     stack: Vec<usize>,
@@ -15,7 +15,7 @@ where
 impl<'a, T, W> DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     fn new(g: &'a Graph<T, W>, start: usize) -> Self {
         let n = g.v_lst.len();
@@ -29,7 +29,7 @@ where
 impl<'a, T, W> Iterator for DfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     type Item = usize;
 
@@ -51,7 +51,7 @@ where
 impl<T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     /// NOTE: return index of vertices is promgram friendly
     /// just use graph[index] for human friendly read
@@ -72,7 +72,7 @@ where
 struct IddfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     visited: Vec<bool>,
     stack: Vec<(usize, usize)>,
@@ -85,7 +85,7 @@ where
 impl<'a, T, W> IddfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     fn new(g: &'a Graph<T, W>, start: usize) -> Self {
         let n = g.v_lst.len();
@@ -105,7 +105,7 @@ where
 impl<'a, T, W> Iterator for IddfsIter<'a, T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     type Item = usize;
 
@@ -138,7 +138,7 @@ where
 impl<T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + Default,
+    W: Clone + Copy,
 {
     pub fn iddfs<'a>(&'a self, start: &Vertex<T>) -> impl Iterator<Item = usize> + 'a {
         if let Some(&i) = self.v_map.get(start) {
