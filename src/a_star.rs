@@ -48,11 +48,11 @@ where
         while let Some((d, u, v)) = self.heap.pop() {
             if !self.used[u] {
                 self.used[u] = true;
+                let hu = (self.func)(u);
                 for (&v, &w) in &self.edges[u] {
-                    self.heap
-                        .push((d + w - (self.func)(u) + (self.func)(v), v, u));
+                    self.heap.push((d + w - hu + (self.func)(v), v, u));
                 }
-                return Some((d, u, v));
+                return Some((d - hu, u, v));
             }
         }
         None
@@ -84,15 +84,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Vertex;
     use crate::from_weighted_edges;
+    use crate::Vertex;
     use std::fmt;
     use std::ops::Deref;
 
     #[derive(PartialEq, Eq, Hash, Clone)]
     struct VData {
         s: &'static str, // symbol
-        x: i32, // NOTE: f64 did not implement Hash, Eq, because NaNs
+        x: i32,          // NOTE: f64 did not implement Hash, Eq, because NaNs
         y: i32,
     }
 
