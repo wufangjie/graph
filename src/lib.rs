@@ -19,3 +19,5 @@ pub mod prim;
 pub mod dijkstra;
 
 pub mod a_star;
+
+pub mod bellman_ford;

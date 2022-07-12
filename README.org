@@ -16,9 +16,9 @@
 |                                     | prim            |
 | single source shortest path         | dijkstra        |
 |                                     | A*              |
+|                                     | bellman ford    |
 
 * Todo
-| single source shortest path         | bellman ford          |
 | multiple sources shortest path      | johnson               |
 |                                     | floyd warshall        |
 | maxflow (augment path)              | bipartite matching    |
