@@ -6,7 +6,7 @@ use std::ops::Add;
 impl<'a, T, W> Graph<T, W>
 where
     T: Eq + Hash + Clone,
-    W: Clone + Copy + PartialOrd + Add<Output = W> + Default + std::fmt::Debug,
+    W: Clone + Copy + PartialOrd + Add<Output = W> + Default,
 {
     /// return (no negative cycle?, dist, from)
     /// unlike dijkstra iter, we will get start vertex in returned result
