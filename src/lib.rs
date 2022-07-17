@@ -1,12 +1,15 @@
 pub mod vertex;
 pub use vertex::Vertex;
 
-pub mod graph;
-pub use graph::Graph;
+pub mod weight;
+pub use weight::{NoWeight, Weight};
 
-pub mod dfs;
+pub mod graph;
+pub use crate::graph::Graph; // ambiguously?
 
 pub mod bfs;
+
+pub mod dfs;
 
 pub mod topo_sort;
 
@@ -17,7 +20,10 @@ pub mod kruskal;
 pub mod prim;
 
 pub mod dijkstra;
+pub use dijkstra::DijkstraIter;
 
 pub mod a_star;
 
 pub mod bellman_ford;
+
+pub mod johnson;

@@ -5,9 +5,7 @@
 | core data structure                 |                 |
 | easy to use/test macros             |                 |
 | dfs                                 | dfs             |
-|                                     | dfs_last        |
 |                                     | iddfs           |
-|                                     |                 |
 | bfs                                 |                 |
 | DAG's topological sort              | dfs             |
 |                                     | reference count |
