@@ -1,21 +1,13 @@
-use crate::{Graph, Vertex};
+use crate::{Graph, Vertex, Weight};
 
-use std::hash::Hash;
-use std::ops::Add;
-
-impl<'a, T, W> Graph<T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy + PartialOrd + Add<Output = W> + Default,
-{
+impl<'a, T, W: Weight> Graph<T, W> {
     /// return (no negative cycle?, dist, from)
     /// unlike dijkstra iter, we will get start vertex in returned result
     /// so we should skip start vertex by hand
     /// TODO: a better way to init distance list: use inf (how?), or Option, or HashMap?
     pub fn bellman_ford(&self, start: &Vertex<T>) -> (bool, Vec<Option<W>>, Vec<usize>) {
-        let s = *self
-            .v_map
-            .get(start)
+        let s = self
+            .get_index_of(start)
             .expect("Start vertex not in this graph");
         let n = self.len();
 
@@ -36,7 +28,7 @@ where
                         if can_improve {
                             from[v] = u;
                             dist[v] = Some(d + w);
-                            improved = true
+                            improved = true;
                         }
                     }
                 }
@@ -52,12 +44,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{from_weighted_edges, make_vertices};
+    use crate::{add_vertices, add_weighted_edges};
 
     #[test]
     fn test_bellman_ford() {
-        make_vertices!(a, b, c, d, e, f, g, h, i);
-        let mut g2 = from_weighted_edges!(
+        let mut g2: Graph<(), _> = Graph::new();
+        add_vertices!(g2 # a, b, c, d, e, f, g, h, i);
+        add_weighted_edges!(g2 #
             a: (b, 4), (h, 8);
             b: (c, 8), (h, 11);
             c: (d, 7), (f, 4), (i, 2);
@@ -65,15 +58,13 @@ mod tests {
             e: (f, 10);
             f: (g, 2);
             g: (h, 1), (i, 6);
-            h: (i, 7)
-        );
+            h: (i, 7));
         g2.add_rev_edges();
 
         let (s, dist, from) = g2.bellman_ford(&h);
-        let n = g2.len();
         println!("All distance from {}:", &h);
         println!("No negative cycle: {}:", s);
-        for i in 0..n {
+        for i in 0..g2.len() {
             println!(
                 "{}, dist: {:?}, directly from: {}",
                 &g2[i], dist[i], &g2[from[i]]

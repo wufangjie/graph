@@ -1,13 +1,29 @@
-use crate::{Graph, Vertex};
+use crate::{Graph, Vertex, Weight};
 
 use std::collections::HashMap;
-use std::hash::Hash;
-use std::ops::{Add, Sub};
 use utils::Heap;
+
+impl<'a, T, W: Weight> Graph<T, W> {
+    /// the difference between dijstra and prim's algorithm:
+    /// 1. dijstra need to specify a start vertex, while prim needn't
+    /// 2. the weight push to the heap: d + w vs w
+    /// 3. [NOT Algorithm] dijkstra works on directed graph, while prim on undirected graph
+    fn a_star(
+        &'a self,
+        start: &Vertex<T>,
+        func: impl Fn(usize) -> W + 'a,
+    ) -> impl Iterator<Item = (W, usize, usize)> + 'a {
+        if let Some(u) = self.get_index_of(start) {
+            AStarIter::new(&self.e_lst, u, func)
+        } else {
+            panic!("Vertex not in this graph");
+        }
+    }
+}
 
 struct AStarIter<'a, W, F>
 where
-    W: Clone + Copy + PartialOrd + Add<Output = W>,
+    W: Weight,
     F: Fn(usize) -> W,
 {
     edges: &'a Vec<HashMap<usize, W>>,
@@ -18,7 +34,7 @@ where
 
 impl<'a, W, F> AStarIter<'a, W, F>
 where
-    W: Clone + Copy + PartialOrd + Add<Output = W>,
+    W: Weight,
     F: Fn(usize) -> W,
 {
     fn new(edges: &'a Vec<HashMap<usize, W>>, start: usize, func: F) -> Self {
@@ -39,7 +55,7 @@ where
 
 impl<'a, W, F> Iterator for AStarIter<'a, W, F>
 where
-    W: Clone + Copy + PartialOrd + Add<Output = W> + Sub<Output = W>,
+    W: Weight,
     F: Fn(usize) -> W,
 {
     type Item = (W, usize, usize);
@@ -59,88 +75,30 @@ where
     }
 }
 
-impl<'a, T, W> Graph<T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy + PartialOrd + Add<Output = W> + Sub<Output = W>,
-{
-    /// the difference between dijstra and prim's algorithm:
-    /// 1. dijstra need to specify a start vertex, while prim needn't
-    /// 2. the weight push to the heap: d + w vs w
-    /// 3. [NOT Algorithm] dijkstra works on directed graph, while prim on undirected graph
-    fn a_star(
-        &'a self,
-        start: &Vertex<T>,
-        func: impl Fn(usize) -> W + 'a,
-    ) -> impl Iterator<Item = (W, usize, usize)> + 'a {
-        if let Some(&i) = self.v_map.get(start) {
-            AStarIter::new(&self.e_lst, i, func)
-        } else {
-            panic!("Vertex not in this graph");
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::from_weighted_edges;
-    use crate::Vertex;
-    use std::fmt;
-    use std::ops::Deref;
-
-    #[derive(PartialEq, Eq, Hash, Clone)]
-    struct VData {
-        s: &'static str, // symbol
-        x: i32,          // NOTE: f64 did not implement Hash, Eq, because NaNs
-        y: i32,
-    }
-
-    impl fmt::Debug for VData {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "{:?}", self.s)
-        }
-    }
-
-    // impl PartialEq for VData {
-    // 	fn eq(&self, other: &Self) -> bool {
-    // 	    self.s == other.s
-    // 	}
-    // }
-
-    // impl Hash for VData {
-    // 	fn hash<H: Hasher>(&self, state: &mut H) {
-    // 	    self.s.hash(state);
-    // 	}
-    // }
-
-    impl VData {
-        fn new(s: &'static str, x: i32, y: i32) -> Self {
-            Self { s, x, y }
-        }
-
-        fn dist_to(&self, other: &Self) -> f64 {
-            (((self.x - other.x) as f64).powi(2) + ((self.y - other.y) as f64).powi(2)).powf(0.5)
-        }
-    }
+    use crate::{add_vertices_with_data, add_weighted_edges};
 
     #[test]
     fn test_a_star() {
-        //make_vertices!(a, b, c, d, e, f, g, h, i, j, k, l);
-        let a = Vertex::new(VData::new("a", 0, 0));
-        let b = Vertex::new(VData::new("b", 1, 0));
-        let c = Vertex::new(VData::new("c", 2, 0));
-        let d = Vertex::new(VData::new("d", 3, 0));
-        let e = Vertex::new(VData::new("e", 0, 1));
-        let f = Vertex::new(VData::new("f", 1, 1));
-        let g = Vertex::new(VData::new("g", 2, 1));
-        let h = Vertex::new(VData::new("h", 3, 1));
-        let i = Vertex::new(VData::new("i", 0, 2));
-        let j = Vertex::new(VData::new("j", 1, 2));
-        let k = Vertex::new(VData::new("k", 2, 2));
-        let l = Vertex::new(VData::new("l", 3, 2));
+        let mut g9: Graph<(f64, f64), f64> = Graph::new();
 
-        let g2 = from_weighted_edges!(
+        add_vertices_with_data!(g9 #
+            a, (0., 0.);
+            b, (1., 0.);
+            c, (2., 0.);
+            d, (3., 0.);
+            e, (0., 1.);
+            f, (1., 1.);
+            g, (2., 1.);
+            h, (3., 1.);
+            i, (0., 2.);
+            j, (1., 2.);
+            k, (2., 2.);
+            l, (3., 2.));
+
+        add_weighted_edges!(g9 #
             a: (b, 1.1), (e, 1.0);
             b: (f, 1.0), (c, 2.0);
             c: (g, 2.0), (d, 3.0);
@@ -153,14 +111,21 @@ mod tests {
             j: (k, 1.0);
             k: (l, 2.0)
         );
-        //g2.add_rev_edges();
+
+        // dbg!(&g9);
+
+        g9.add_rev_edges();
 
         println!("All distance from {:?}:", &a);
-        let calc_dist = |u| g2[u].borrow().deref().dist_to(&l.borrow());
-        for (w, u, v) in g2.a_star(&a, calc_dist) {
+        let calc_dist = |u| {
+            let (x0, y0) = &l.borrow().data;
+            let (x1, y1) = g9[u].borrow().data;
+            ((x1 - x0).powi(2) + (y1 - y0).powi(2)).powf(0.5)
+        };
+        for (w, u, v) in g9.a_star(&a, calc_dist) {
             println!(
                 "distance: {:.4}, to: {:?}, direct from: {:?}",
-                w, &g2[u], &g2[v]
+                w, &g9[u], &g9[v]
             );
         }
     }

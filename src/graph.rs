@@ -1,49 +1,24 @@
 /// This module impl graph's basic data structures and some useful Macros
-/// Struct:
-/// Graph<T, W>, Graph<T, ()>
-/// NOTE: use Graph<T, ()> to present unweighted graph (no space wasting)
+/// NOTE: use Graph<T, NoWeight> to present unweighted graph (NoWeight is a zst)
 /// Macros:
 /// 1. from_edges_nw
 /// 2. from_edges_ww
-use crate::Vertex;
+use crate::{Vertex, Weight};
+//use std::ops::PartialEq;
 use std::collections::HashMap;
-use std::hash::Hash;
 use std::ops::Index;
 
 #[derive(Debug, Clone)]
-pub struct Graph<T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy,
-{
+pub struct Graph<T, W: Weight> {
     pub(crate) v_lst: Vec<Vertex<T>>,
-    pub(crate) v_map: HashMap<Vertex<T>, usize>,
     pub(crate) e_lst: Vec<HashMap<usize, W>>, // edges
 }
 
-impl<T, W> Default for Graph<T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T, W> Graph<T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy,
-{
-    pub fn new() -> Self {
-        Self {
-            v_lst: Default::default(),
-            v_map: Default::default(),
-            e_lst: Default::default(),
-        }
-    }
-
+/// Core methods a graph should implement
+/// I tried to implement a graph trait, but failed
+/// because trait methods can not return impl Iterator
+/// TODO: if this core methods is well designed?
+impl<T, W: Weight> Graph<T, W> {
     pub fn len(&self) -> usize {
         self.v_lst.len()
     }
@@ -52,129 +27,123 @@ where
         self.len() == 0
     }
 
-    pub fn try_insert(&mut self, v: &Vertex<T>) -> usize {
-        match self.v_map.get(v) {
-            Some(i) => *i,
-            None => {
-                let i = self.v_lst.len();
-                self.v_lst.push(v.clone());
-                self.v_map.insert(v.clone(), i);
-                self.e_lst.push(Default::default());
-                i
+    pub fn iter_vertices(&self) -> impl Iterator<Item = usize> {
+        0..self.len()
+    }
+
+    /// return all vertex: u's outdegree as an iterator
+    pub fn iter_vertices_from(&self, u: usize) -> impl Iterator<Item = usize> + '_ {
+        self.e_lst[u].keys().cloned()
+    }
+
+    /// NOTE: we can not elide '_, and we don't to add 'a by hand
+    pub fn iter_edges_from(&self, u: usize) -> impl Iterator<Item = (usize, W)> + '_ {
+        self.e_lst[u].iter().map(|(&v, &w)| (v, w))
+    }
+
+    /// TODO: make it iterable, (it's easy and elegant if rust can use yield)
+    pub fn iter_edges(&self) -> Vec<(usize, usize, W)> {
+        let mut res = vec![]; // with_capacity?
+        for u in self.iter_vertices() {
+            for (v, w) in self.iter_edges_from(u) {
+                res.push((u, v, w));
             }
         }
+        res
     }
+}
 
-    pub fn add_edge_directed(&mut self, u: &Vertex<T>, v: &Vertex<T>, w: W) {
-        let i = self.try_insert(u);
-        let j = self.try_insert(v);
-        self.e_lst[i].insert(j, w);
+impl<T, W: Weight> Default for Graph<T, W> {
+    fn default() -> Self {
+        Self::new()
     }
+}
 
-    pub fn add_edge_undirected(&mut self, u: &Vertex<T>, v: &Vertex<T>, w: W) {
-        let i = self.try_insert(u);
-        let j = self.try_insert(v);
-        self.e_lst[i].insert(j, w);
-        self.e_lst[j].insert(i, w);
-    }
-
-    pub fn edges(&self) -> Vec<(usize, usize, W)> {
-        self.e_lst
-            .iter()
-            .enumerate()
-            .flat_map(|(u, dct)| {
-                dct.iter()
-                    .map(|(v, w)| (u, *v, *w))
-                    .collect::<Vec<(usize, usize, W)>>()
-            })
-            .collect()
-
-        // let mut res = vec![];
-        // for (u, dct) in self.e_lst.iter().enumerate() {
-        //     for (&v, &w) in dct {
-        // 	res.push((u, v, w));
-        //     }
-        // }
-        // res
-    }
-
-    pub fn get_rev_edges(&self) -> Vec<HashMap<usize, W>> {
-        let mut e_lst = vec![HashMap::<usize, W>::new(); self.len()];
-        for (u, v, w) in self.edges() {
-            e_lst[v].insert(u, w);
+impl<T, W: Weight> Graph<T, W> {
+    pub fn new() -> Self {
+        Self {
+            v_lst: Default::default(),
+            e_lst: Default::default(),
         }
-        e_lst
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Vertex<T>> {
+        self.v_lst.iter()
+    }
+
+    pub fn get_index_of(&self, vertex: &Vertex<T>) -> Option<usize> {
+        let u = vertex.get_index();
+        if u < self.len() && vertex == &self[u] {
+            Some(u)
+        } else {
+            None
+        }
+    }
+
+    pub fn add_vertex(&mut self, v: &mut Vertex<T>) {
+        let n = self.len();
+        v.reset_index(n);
+        self.v_lst.push(v.clone());
+        self.e_lst.push(Default::default());
+    }
+
+    pub fn add_edge_directed(&mut self, u: &Vertex<T>, v: &Vertex<T>, w: W) -> bool {
+        let i = u.get_index();
+        if i < self.len() {
+            let j = v.get_index();
+            if j < self.len() {
+                self.e_lst[i].insert(j, w);
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn add_edge_undirected(&mut self, u: &Vertex<T>, v: &Vertex<T>, w: W) -> bool {
+        let i = u.get_index();
+        if i < self.len() {
+            let j = v.get_index();
+            if j < self.len() {
+                self.e_lst[i].insert(j, w);
+                self.e_lst[j].insert(i, w);
+                return true;
+            }
+        }
+        false
     }
 
     pub fn add_rev_edges(&mut self) {
-        for (u, v, w) in self.edges() {
+        for (u, v, w) in self.iter_edges() {
             self.e_lst[v].insert(u, w);
         }
+    }
+
+    pub fn make_rev_e_lst(&self) -> Vec<HashMap<usize, W>> {
+        let mut rev_e_lst = vec![HashMap::<usize, W>::new(); self.len()];
+        for (u, v, w) in self.iter_edges() {
+            rev_e_lst[v].insert(u, w);
+        }
+        rev_e_lst
+    }
+
+    pub fn make_undirected_edges(&self) -> Vec<HashMap<usize, W>> {
+        let mut undirected_edges = self.make_rev_e_lst();
+        for (u, v, w) in self.iter_edges() {
+            undirected_edges[u].insert(v, w);
+        }
+        undirected_edges
     }
 
     pub fn make_rev_graph(&self) -> Self {
         Self {
             v_lst: self.v_lst.clone(),
-            v_map: self.v_map.clone(),
-            e_lst: self.get_rev_edges(),
+            e_lst: self.make_rev_e_lst(),
         }
     }
 }
 
-// fn safe_update<T: Eq + Hash>(
-//     dct: &mut HashMap<Vertex<T>, i32>,
-//     lst: &mut [Vertex<T>],
-//     idx: usize,
-//     new_val: T,
-// ) {
-//     if *lst[idx].borrow() == new_val {
-//         return;
-//     }
-//     let old_opt = dct.remove(&lst[idx]);
-//     *lst[idx].borrow_mut() = new_val;
-//     if let Some(old) = old_opt {
-//         dct.insert(lst[idx].clone(), old);
-//     }
-// }
-
-#[macro_export]
-macro_rules! from_unweighted_edges {
-    ($($first:ident: $($rest:ident),+);*) => {
-	{
-	    let mut g = Graph::new();
-	    $(
-		let u = $first.clone();
-		$(
-		    g.add_edge_directed(&u, &$rest.clone(), ());
-		)+
-	    )*
-	    g
-	}
-    };
-}
-
-#[macro_export]
-macro_rules! from_weighted_edges {
-    ($($first:ident: $(($rest:ident, $weight: expr)),+);*) => {
-	{
-	    let mut g = Graph::new();
-	    $(
-		let u = $first.clone();
-		$(
-		    g.add_edge_directed(&u, &$rest.clone(), $weight);
-		)+
-	    )*
-	    g
-	}
-    };
-}
-
 /// Indexing: you can use g[i] to index vertex
-impl<T, W> Index<usize> for Graph<T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy,
-{
+impl<T, W: Weight> Index<usize> for Graph<T, W> {
     type Output = Vertex<T>;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -182,33 +151,75 @@ where
     }
 }
 
+/// A macro to make vertices only label without carrying any id or data
+/// after a graph is made, if you want to change id,
+/// you should both change the id in vertex and the index in graph's v_lst
+#[macro_export]
+macro_rules! add_vertices {
+    ($graph:ident # $($vertex:ident),*) => {
+	$(
+	    let mut $vertex = Vertex::new(stringify!($vertex));
+	    $graph.add_vertex(&mut $vertex);
+	)*
+    }
+}
+
+#[macro_export]
+macro_rules! add_vertices_with_data {
+    ($graph:ident # $($vertex:ident, $data:expr);*) => {
+	$(
+	    let mut $vertex = Vertex::new_with_data(stringify!($vertex), $data);
+	    $graph.add_vertex(&mut $vertex);
+	)*
+    }
+}
+
+// #[macro_export]
+// macro_rules! extract_vertices {
+//     ($graph_iter:ident # $($vertex:ident),*) => {
+// 	$(
+// 	    let $vertex = $graph_iter.next().unwrap().clone();
+// 	)*
+//     }
+// }
+
+#[macro_export]
+macro_rules! add_unweighted_edges {
+    ($graph:ident # $($from:ident: $($to:ident),+);*) => {
+	{
+	    $(
+		let u = $from.clone();
+		$(
+		    $graph.add_edge_directed(&u, &$to.clone(), crate::NoWeight);
+		)+
+	    )*
+	}
+    };
+}
+
+#[macro_export]
+macro_rules! add_weighted_edges {
+    ($graph:ident # $($from:ident: $(($to:ident, $weight:expr)),+);*) => {
+	{
+	    $(
+		let u = $from.clone();
+		$(
+		    $graph.add_edge_directed(&u, &$to.clone(), $weight);
+		)+
+	    )*
+	}
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::make_vertices;
-    // fn make_g1() -> Graph<&'static str, ()> {
-    // }
-
-    fn make_g2() -> Graph<&'static str, i32> {
-        make_vertices!(a, b, c, d, e, f, g, h, i);
-        // TODO: maybe keep alphabet order?
-        from_weighted_edges!(
-            a: (b, 4), (h, 8);
-            b: (c, 8), (h, 11);
-            c: (d, 7), (f, 4), (i, 2);
-            d: (e, 9), (f, 14);
-            e: (f, 10);
-            f: (g, 2);
-            g: (h, 1), (i, 6);
-            h: (i, 7)
-        )
-    }
 
     #[test]
-    fn test_gen() {
-        // make unweighted graph
-        make_vertices!(a, b, c, d, e, f, g, h, i);
-        let mut g1 = from_unweighted_edges!(
+    fn test_make_unweighted_graph() {
+        let mut g1: Graph<(), _> = Graph::new();
+        add_vertices!(g1 # a, b, c, d, e, f, g, h, i);
+        add_unweighted_edges!(g1 #
             a: b, c;
             b: c, e, i;
             c: d;
@@ -217,25 +228,25 @@ mod tests {
             f: g;
             g: e, i;
             h: i;
-            i: h
-        );
-
-        //dbg!(&g1.edges());
-        //dbg!(&g1.make_rev_graph());
-        g1.add_rev_edges();
+	    i: h);
+        assert_eq!(i.get_index(), 8);
         dbg!(&g1);
-        //dbg!(&g1);
-        // indexing
-        assert_eq!(g1[0], a);
-        assert_eq!(g1[1], b);
-        assert_eq!(g1[5], d);
-        assert_eq!(*g1.v_map.get(&d).unwrap(), 5);
+    }
 
-        // make weighted graph
-        let g2 = make_g2();
-        //dbg!(&g2);
-        // indexing
-        assert_eq!(g2[3], c);
-        assert_eq!(g2[*g2.v_map.get(&i).unwrap()], i);
+    #[test]
+    fn test_make_weighted_graph() {
+        let mut g2: Graph<(), _> = Graph::new();
+        add_vertices!(g2 # a, b, c, d, e, f, g, h, i);
+        add_weighted_edges!(g2 #
+            a: (b, 4), (h, 8);
+            b: (c, 8), (h, 11);
+            c: (d, 7), (f, 4), (i, 2);
+            d: (e, 9), (f, 14);
+            e: (f, 10);
+            f: (g, 2);
+            g: (h, 1), (i, 6);
+            h: (i, 7));
+        assert_eq!(i.get_index(), 8);
+        dbg!(&g2);
     }
 }

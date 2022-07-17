@@ -1,22 +1,36 @@
-use crate::{Graph, Vertex};
+use crate::{Graph, Vertex, Weight};
 
 use std::collections::HashMap;
-use std::hash::Hash;
 use utils::Heap;
 
-struct PrimIter<'a, W>
-where
-    W: Clone + Copy + PartialOrd,
-{
+impl<'a, T, W: Weight> Graph<T, W> {
+    /// run prim on directed graph
+    /// it is only can be used on the graph,
+    /// which exist (a -> b: w) then (b -> a: w),
+    /// otherwise we will get bad result
+    /// it is faster than prim(), since we needn't to add reverse edges
+    /// NOTE: this method used the specail structure of graph
+    fn prim_directed(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
+        PrimIter::new(&self.e_lst)
+            .map(|(w, u, v)| (w, &self[u], &self[v]))
+            .collect::<Vec<(W, &Vertex<T>, &Vertex<T>)>>()
+    }
+
+    fn prim(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
+        let undirected_edges = self.make_undirected_edges();
+        PrimIter::new(&undirected_edges)
+            .map(|(w, u, v)| (w, &self[u], &self[v]))
+            .collect::<Vec<(W, &Vertex<T>, &Vertex<T>)>>()
+    }
+}
+
+struct PrimIter<'a, W: Weight> {
     edges: &'a Vec<HashMap<usize, W>>,
     used: Vec<bool>,
     heap: Heap<(W, usize, usize)>,
 }
 
-impl<'a, W> PrimIter<'a, W>
-where
-    W: Clone + Copy + PartialOrd,
-{
+impl<'a, W: Weight> PrimIter<'a, W> {
     fn new(edges: &'a Vec<HashMap<usize, W>>) -> Self {
         let start = 0;
         let mut heap = Heap::new();
@@ -29,10 +43,7 @@ where
     }
 }
 
-impl<'a, W> Iterator for PrimIter<'a, W>
-where
-    W: Clone + Copy + PartialOrd,
-{
+impl<'a, W: Weight> Iterator for PrimIter<'a, W> {
     type Item = (W, usize, usize);
 
     fn next(&mut self) -> Option<(W, usize, usize)> {
@@ -49,44 +60,16 @@ where
     }
 }
 
-impl<'a, T, W> Graph<T, W>
-where
-    T: Eq + Hash + Clone,
-    W: Clone + Copy + PartialOrd, // + std::fmt::Debug,
-{
-    /// run prim on directed graph
-    /// it is only can be used on the graph,
-    /// which exist (a -> b: w) then (b -> a: w),
-    /// otherwise we will get bad result
-    /// it is faster than prim(), since we needn't to add reverse edges
-    fn prim_directed(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
-        PrimIter::new(&self.e_lst)
-            .map(|(w, u, v)| (w, &self[u], &self[v]))
-            .collect::<Vec<(W, &Vertex<T>, &Vertex<T>)>>()
-    }
-
-    fn prim(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
-        let mut edges = self.get_rev_edges();
-        for (u, dct) in self.e_lst.iter().enumerate() {
-            for (&v, &w) in dct {
-                edges[u].insert(v, w);
-            }
-        }
-        PrimIter::new(&edges)
-            .map(|(w, u, v)| (w, &self[u], &self[v]))
-            .collect::<Vec<(W, &Vertex<T>, &Vertex<T>)>>()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{from_weighted_edges, make_vertices};
+    use crate::{add_vertices, add_weighted_edges};
 
     #[test]
     fn test_prim() {
-        make_vertices!(a, b, c, d, e, f, g, h, i);
-        let g2 = from_weighted_edges!(
+        let mut g2: Graph<(), _> = Graph::new();
+        add_vertices!(g2 # a, b, c, d, e, f, g, h, i);
+        add_weighted_edges!(g2 #
             a: (b, 4), (h, 8);
             b: (c, 8), (h, 11);
             c: (d, 7), (f, 4), (i, 2);
@@ -94,8 +77,7 @@ mod tests {
             e: (f, 10);
             f: (g, 2);
             g: (h, 1), (i, 6);
-            h: (i, 7)
-        );
+            h: (i, 7));
 
         dbg!(&g2.prim());
 
