@@ -6,6 +6,7 @@ use utils::Heap;
 impl<'a, T, W: Weight> Graph<T, W> {
     /// NOTE: kruskal can process directed graph (which will be more efficient)
     /// since we need the spanning tree, return Vec rather Iterator
+    /// O(ElogV)
     pub fn kruskal(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
         let mut heap = Heap::from(
             self.iter_edges()

@@ -5,6 +5,7 @@ impl<'a, T, W: Weight> Graph<T, W> {
     /// unlike dijkstra iter, we will get start vertex in returned result
     /// so we should skip start vertex by hand
     /// TODO: a better way to init distance list: use inf (how?), or Option, or HashMap?
+    /// O(VE)
     pub fn bellman_ford(&self, start: &Vertex<T>) -> (bool, Vec<Option<W>>, Vec<usize>) {
         let s = self
             .get_index_of(start)

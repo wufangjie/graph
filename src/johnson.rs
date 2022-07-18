@@ -8,6 +8,7 @@ impl<'a, T, W: Weight> Graph<T, W> {
     /// 2. no need to add an additional vertex (johnson)
     /// 3. the if condition is much easier
     /// 4. the super vertex always have an edge to every vertex, so no use to use Option
+    /// O(V(E+V)logV)
     fn calc_h(&self) -> Option<Vec<W>> {
         let n = self.len();
         let mut dist = vec![Default::default(); n];

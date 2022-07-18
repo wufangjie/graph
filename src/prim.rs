@@ -10,6 +10,7 @@ impl<'a, T, W: Weight> Graph<T, W> {
     /// otherwise we will get bad result
     /// it is faster than prim(), since we needn't to add reverse edges
     /// NOTE: this method used the specail structure of graph
+    /// O((E+V)logV)
     fn prim_directed(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
         PrimIter::new(&self.e_lst)
             .map(|(w, u, v)| (w, &self[u], &self[v]))
