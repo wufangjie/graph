@@ -2,7 +2,7 @@ use crate::{DijkstraIter, Graph, Weight};
 
 use std::collections::HashMap;
 
-impl<'a, T, W: Weight> Graph<T, W> {
+impl<T, W: Weight> Graph<T, W> {
     /// use modified (faster) bellman ford, to remove negative edges
     /// 1. no from (to make a path)
     /// 2. no need to add an additional vertex (johnson)

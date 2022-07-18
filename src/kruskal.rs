@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 //use std::collections::BinaryHeap;
 use utils::Heap;
 
-impl<'a, T, W: Weight> Graph<T, W> {
+impl<T, W: Weight> Graph<T, W> {
     /// NOTE: kruskal can process directed graph (which will be more efficient)
     /// since we need the spanning tree, return Vec rather Iterator
     /// O(ElogV)

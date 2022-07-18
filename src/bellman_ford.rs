@@ -1,6 +1,6 @@
 use crate::{Graph, Vertex, Weight};
 
-impl<'a, T, W: Weight> Graph<T, W> {
+impl<T, W: Weight> Graph<T, W> {
     /// return (no negative cycle?, dist, from)
     /// unlike dijkstra iter, we will get start vertex in returned result
     /// so we should skip start vertex by hand

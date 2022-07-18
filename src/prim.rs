@@ -3,7 +3,7 @@ use crate::{Graph, Vertex, Weight};
 use std::collections::HashMap;
 use utils::Heap;
 
-impl<'a, T, W: Weight> Graph<T, W> {
+impl<T, W: Weight> Graph<T, W> {
     /// run prim on directed graph
     /// it is only can be used on the graph,
     /// which exist (a -> b: w) then (b -> a: w),

@@ -1,6 +1,6 @@
 use crate::{Graph, Weight};
 
-impl<'a, T, W: Weight> Graph<T, W> {
+impl<T, W: Weight> Graph<T, W> {
     /// can not process negative cycle
     /// O(V^3)
     /// if W is float, we can use const INFINITY to speed up?

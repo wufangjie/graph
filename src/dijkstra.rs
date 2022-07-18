@@ -3,13 +3,13 @@ use crate::{Graph, Vertex, Weight};
 use std::collections::HashMap;
 use utils::Heap;
 
-impl<'a, T, W: Weight> Graph<T, W> {
+impl<T, W: Weight> Graph<T, W> {
     /// the difference between dijstra and prim's algorithm:
     /// 1. dijstra need to specify a start vertex, while prim needn't
     /// 2. the weight push to the heap: d + w vs w
     /// 3. [NOT Algorithm] dijkstra works on directed graph, while prim on undirected graph
     /// O((E+V)logV) // logV ~ logE
-    fn dijkstra(&'a self, start: &Vertex<T>) -> impl Iterator<Item = (W, usize, usize)> + 'a {
+    fn dijkstra(&self, start: &Vertex<T>) -> impl Iterator<Item = (W, usize, usize)> + '_ {
         if let Some(u) = self.get_index_of(start) {
             DijkstraIter::new(&self.e_lst, u)
         } else {
