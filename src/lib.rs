@@ -27,3 +27,5 @@ pub mod a_star;
 pub mod bellman_ford;
 
 pub mod johnson;
+
+pub mod floyd_warshall;

@@ -15,10 +15,10 @@
 | single source shortest path         | dijkstra        |
 |                                     | A*              |
 |                                     | bellman ford    |
+| multiple sources shortest path      | johnson         |
+|                                     | floyd warshall  |
 
 * Todo
-| multiple sources shortest path      | johnson               |
-|                                     | floyd warshall        |
 | maxflow (augment path)              | bipartite matching    |
 |                                     | edge disjoint paths   |
 |                                     | vertex disjoint paths |
