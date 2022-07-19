@@ -29,3 +29,5 @@ pub mod bellman_ford;
 pub mod johnson;
 
 pub mod floyd_warshall;
+
+pub mod bipartite_match;

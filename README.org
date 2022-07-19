@@ -2,25 +2,25 @@
 ** there is at most one edge from one vertex to another (can be the same)
 
 * Done
-| core data structure                 |                 |
-| easy to use/test macros             |                 |
-| dfs                                 | dfs             |
-|                                     | iddfs           |
-| bfs                                 |                 |
-| DAG's topological sort              | dfs             |
-|                                     | reference count |
-| strongly connected compoments (SCC) |                 |
-| minimum spanning tree               | kruskal         |
-|                                     | prim            |
-| single source shortest path         | dijkstra        |
-|                                     | A*              |
-|                                     | bellman ford    |
-| multiple sources shortest path      | johnson         |
-|                                     | floyd warshall  |
+| core data structure                 |                    |
+| easy to use/test macros             |                    |
+| dfs                                 | dfs                |
+|                                     | iddfs              |
+| bfs                                 |                    |
+| DAG's topological sort              | dfs                |
+|                                     | reference count    |
+| strongly connected compoments (SCC) |                    |
+| minimum spanning tree               | kruskal            |
+|                                     | prim               |
+| single source shortest path         | dijkstra           |
+|                                     | A*                 |
+|                                     | bellman ford       |
+| multiple sources shortest path      | johnson            |
+|                                     | floyd warshall     |
+| maxflow (augment path)              | bipartite matching |
 
 * Todo
-| maxflow (augment path)              | bipartite matching    |
-|                                     | edge disjoint paths   |
+| maxflow (augment path)              | edge disjoint paths   |
 |                                     | vertex disjoint paths |
 |                                     | maxflow               |
 |                                     | min-cost max-flow     |
