@@ -1,10 +1,13 @@
 /// This module impl graph's basic data structures and some useful Macros
 /// NOTE: use Graph<T, NoWeight> to present unweighted graph (NoWeight is a zst)
+/// TODO: give generic params a default value?
 /// Macros:
-/// 1. from_edges_nw
-/// 2. from_edges_ww
+/// 1. add_vertices
+/// 2. add_vertices_with_data
+/// 3. add_unweighted_edges
+/// 4. add_weighted_edges
+
 use crate::{Vertex, Weight};
-//use std::ops::PartialEq;
 use std::collections::HashMap;
 use std::ops::Index;
 

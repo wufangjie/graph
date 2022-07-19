@@ -17,7 +17,7 @@ impl<T, W: Weight> Graph<T, W> {
             for u in 0..n {
                 if u == i {
                     // we also can write conditions: v != i, v != u
-                    // but I'm not sure how them will influnce speed
+                    // but I'm not sure how them will influnce the speed
                     continue;
                 }
                 for v in 0..n {

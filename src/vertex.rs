@@ -1,5 +1,5 @@
 /// basic data structure: Vertex
-/// macro: make_vertices
+
 use std::cell::{Ref, RefCell, RefMut};
 use std::fmt;
 use std::rc::Rc;
@@ -8,8 +8,9 @@ use std::rc::Rc;
 /// index: means index in a graph, usize::MAX means not inited (not in any graph)
 /// data: pub field for easy to modify
 /// v1 == v2 if and only if their label and index are the same
-/// NOTE: most of the time, we don't need this field,
+/// NOTE: most of the time, we don't need `data` this field,
 /// just give it a zst: () for example
+/// it's helpful sometimes, see a_star.rs
 // #[derive(Clone)] // T can be any type, don't need a Clone bound
 pub struct RawVertex<T> {
     label: String,
