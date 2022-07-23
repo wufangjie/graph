@@ -6,6 +6,9 @@ impl<T, W: Weight> Graph<T, W> {
     /// so we should skip start vertex by hand
     /// TODO: a better way to init distance list: use inf (how?), or Option, or HashMap?
     /// O(VE)
+    /// NOTE: we can not keep a stack to implement a greedy update, which counting
+    /// the number of any vertex's update times then return if any of them == n
+    /// The correctness of bellman ford: the path from one vertex to another is at most V - 1, and we need one more time to check if negative cycle exist
     pub fn bellman_ford(&self, start: &Vertex<T>) -> (bool, Vec<Option<W>>, Vec<usize>) {
         let s = self
             .get_index_of(start)
