@@ -1,5 +1,4 @@
 /// basic data structure: Vertex
-
 use std::cell::{Ref, RefCell, RefMut};
 use std::fmt;
 use std::rc::Rc;
