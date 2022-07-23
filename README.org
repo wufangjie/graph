@@ -19,8 +19,8 @@
 |                                     | floyd warshall        |
 | maxflow (augment path)              | bipartite matching    |
 |                                     | vertex disjoint paths |
+|                                     | edge disjoint paths   |
 
 * Todo
-| maxflow (augment path)              | edge disjoint paths   |
-|                                     | maxflow               |
-|                                     | min-cost max-flow     |
+| maxflow (augment path) | maxflow           |
+|                        | min-cost max-flow |
