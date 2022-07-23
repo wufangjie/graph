@@ -31,3 +31,5 @@ pub mod johnson;
 pub mod floyd_warshall;
 
 pub mod bipartite_match;
+
+pub mod vertex_disjoint_path;
