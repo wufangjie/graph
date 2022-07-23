@@ -7,8 +7,8 @@ impl<T, W: Weight> Graph<T, W> {
     pub fn floyd_warshall(&self) -> Vec<Vec<Option<W>>> {
         let n = self.len();
         let mut dist = vec![vec![None; n]; n];
-        for u in 0..n {
-            dist[u][u] = Some(Default::default());
+        for (u, dist_u) in dist.iter_mut().enumerate() {
+            dist_u[u] = Some(Default::default());
         }
         for (u, v, w) in self.iter_edges() {
             dist[u][v] = Some(w);
