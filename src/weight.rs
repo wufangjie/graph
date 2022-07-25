@@ -2,7 +2,15 @@ use std::fmt;
 /// this module impl a weight trait, and a NoWeight zero sized type
 use std::ops::{Add, Sub, AddAssign, SubAssign};
 
-pub trait Weight: Clone + Copy + Default + Add<Output = Self> + Sub<Output = Self> + PartialOrd + AddAssign + SubAssign + fmt::Debug {}
+pub trait Weight: Clone + Copy + Default + Add<Output = Self> + Sub<Output = Self> + PartialOrd + AddAssign + SubAssign + fmt::Debug {
+    fn zero() -> Self {
+	Default::default()
+    }
+
+    fn is_zero(&self) -> bool {
+	*self == Self::zero()
+    }
+}
 /// since we can not implement Add, Sub trait for ()
 /// I implement a zero sized type (i.e. NoWeight) by myself
 #[derive(Clone, Copy, PartialEq, PartialOrd, Default)]
