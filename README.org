@@ -21,7 +21,7 @@
 |                                     | vertex disjoint paths |
 |                                     | edge disjoint paths   |
 | maxflow (ford fulkerson)            | edmonds karp          |
+|                                     | dinic                 |
 
 * Todo
-| maxflow (ford fulkerson) | dinic             |
-|                          | min-cost max-flow |
+| maxflow (ford fulkerson) | min-cost max-flow |
