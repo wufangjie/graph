@@ -4,6 +4,10 @@ use std::collections::HashMap;
 
 impl<T, W: Weight> Graph<T, W> {
     /// important: make sure the graph is a bipartite
+    /// this method also can solve: minimum vertex cover problem
+    /// just select one vertex from each matching:
+    /// if one vertex has an edge connect (in/out) to a free vertex, select it
+    /// both of vertices connect to free vertices will not happen (no augmenting path existed)
     pub fn bipartite_match(&self) -> HashMap<usize, usize> {
         let mut matching = HashMap::new();
         for u in 0..self.len() {
