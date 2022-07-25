@@ -87,7 +87,7 @@ impl<T, W: Weight> Graph<T, W> {
                 } else {
                     let to_v = matching.entry(v).or_insert_with(HashMap::new);
                     let u2v = to_v.entry(u).or_insert_with(Default::default);
-                    *u2v = *u2v + w_add; // += need impl AddAssign trait
+                    *u2v += w_add;
                 }
                 v = u;
             }
