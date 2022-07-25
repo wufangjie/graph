@@ -17,10 +17,11 @@
 |                                     | bellman ford          |
 | multiple sources shortest path      | johnson               |
 |                                     | floyd warshall        |
-| maxflow (augment path)              | bipartite matching    |
+| augment path                        | bipartite matching    |
 |                                     | vertex disjoint paths |
 |                                     | edge disjoint paths   |
+| maxflow (ford fulkerson)            | edmonds karp          |
 
 * Todo
-| maxflow (augment path) | maxflow           |
-|                        | min-cost max-flow |
+| maxflow (ford fulkerson) | dinic             |
+|                          | min-cost max-flow |
