@@ -15,6 +15,7 @@
 | single source shortest path         | dijkstra              |
 |                                     | A*                    |
 |                                     | bellman ford          |
+|                                     | spfa                  |
 | multiple sources shortest path      | johnson               |
 |                                     | floyd warshall        |
 | augment path                        | bipartite matching    |
@@ -25,3 +26,6 @@
 
 * Todo
 | maxflow (ford fulkerson) | min-cost max-flow |
+
+Put vertex and edge togethor in Graph seems not good design,
+may be make an Edge trait is good choice (but how can a trait method return impl Iterator?)
