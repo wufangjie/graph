@@ -29,3 +29,28 @@
 
 Put vertex and edge togethor in Graph seems not good design,
 may be make an Edge trait is good choice (but how can a trait method return impl Iterator?)
+
+* built-in testing graphs
+
+** unweighted
+#+CAPTION: graph for testing: scc | bfs | dfs | topological sort
+[[./data/scc.png]]
+
+#+CAPTION: graph for testing: maximum bipartite matching
+[[./data/mbm.png]]
+
+#+CAPTION: graph for testing: edge | vertex disjoint path
+[[./data/dp.png]]
+
+** weighted
+#+CAPTION: graph for testing: prim | kruskal | bellman ford | dijkstra
+[[./data/mst.png]]
+
+#+CAPTION: graph for testing: A* algorithm
+[[./data/spa.png]]
+
+#+CAPTION: graph for testing: johnson | floyd warshall
+[[./data/spn.png]]
+
+#+CAPTION: graph for testing: maxflow
+[[./data/mf.png]]
