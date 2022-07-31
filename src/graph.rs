@@ -1,255 +1,215 @@
-/// This module impl graph's basic data structures and some useful Macros
-/// NOTE: use Graph<T, NoWeight> to present unweighted graph (NoWeight is a zst)
-/// TODO: give generic params a default value?
-/// Macros:
-/// 1. add_vertices
-/// 2. add_vertices_with_data
-/// 3. add_unweighted_edges
-/// 4. add_weighted_edges
+/// One trait: Graph
+/// Two kinds of struct which implemnted Graph trait: VGraph, EGraph
+use crate::{Edge, Weight};
+use std::collections::{HashMap, HashSet};
 
-use crate::{Vertex, Weight};
-use std::collections::HashMap;
-use std::ops::Index;
+/// all `u` in this trait's method may >= self.len(), this may panic
+/// we do not handle this error for simplicity
+pub trait Graph {
+    type Edge: Edge;
 
-#[derive(Debug, Clone)]
-pub struct Graph<T, W: Weight> {
-    pub(crate) v_lst: Vec<Vertex<T>>,
-    pub(crate) e_lst: Vec<HashMap<usize, W>>, // edges
-}
+    /// return the number of vertices
+    fn len(&self) -> usize;
 
-/// Core methods a graph should implement
-/// I tried to implement a graph trait, but failed
-/// because trait methods can not return impl Iterator
-/// TODO: if this core methods is well designed?
-impl<T, W: Weight> Graph<T, W> {
-    pub fn len(&self) -> usize {
-        self.v_lst.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub fn iter_vertices(&self) -> impl Iterator<Item = usize> {
-        0..self.len()
+    /// iter all the vertices of the graph
+    fn iter_v_all(&self) -> Box<dyn Iterator<Item = usize> + '_> {
+        Box::new(0..self.len())
     }
 
-    /// return all vertex: u's outdegree as an iterator
-    pub fn iter_vertices_from(&self, u: usize) -> impl Iterator<Item = usize> + '_ {
-        self.e_lst[u].keys().cloned()
-    }
+    /// iter all the vertices from vertex `u`
+    fn iter_v_from(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_>;
 
-    /// NOTE: we can not elide '_, and we don't to add 'a by hand
-    pub fn iter_edges_from(&self, u: usize) -> impl Iterator<Item = (usize, W)> + '_ {
-        self.e_lst[u].iter().map(|(&v, &w)| (v, w))
-    }
+    /// iter all the vertices to vertex `u`
+    fn iter_v_to(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_>;
 
-    /// TODO: make it iterable, (it's easy and elegant if rust can use yield)
-    pub fn iter_edges(&self) -> Vec<(usize, usize, W)> {
-        let mut res = vec![]; // with_capacity?
-        for u in self.iter_vertices() {
-            for (v, w) in self.iter_edges_from(u) {
-                res.push((u, v, w));
-            }
-        }
-        res
-    }
-}
-
-impl<T, W: Weight> Default for Graph<T, W> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T, W: Weight> Graph<T, W> {
-    pub fn new() -> Self {
-        Self {
-            v_lst: Default::default(),
-            e_lst: Default::default(),
-        }
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = &Vertex<T>> {
-        self.v_lst.iter()
-    }
-
-    pub fn get_index_of(&self, vertex: &Vertex<T>) -> Option<usize> {
-        let u = vertex.get_index();
-        if u < self.len() && vertex == &self[u] {
-            Some(u)
-        } else {
-            None
-        }
-    }
-
-    pub fn add_vertex(&mut self, v: &mut Vertex<T>) {
-        let n = self.len();
-        v.reset_index(n);
-        self.v_lst.push(v.clone());
-        self.e_lst.push(Default::default());
-    }
-
-    pub fn add_edge_directed(&mut self, u: &Vertex<T>, v: &Vertex<T>, w: W) -> bool {
-        let i = u.get_index();
-        if i < self.len() {
-            let j = v.get_index();
-            if j < self.len() {
-                self.e_lst[i].insert(j, w);
-                return true;
-            }
-        }
-        false
-    }
-
-    pub fn add_edge_undirected(&mut self, u: &Vertex<T>, v: &Vertex<T>, w: W) -> bool {
-        let i = u.get_index();
-        if i < self.len() {
-            let j = v.get_index();
-            if j < self.len() {
-                self.e_lst[i].insert(j, w);
-                self.e_lst[j].insert(i, w);
-                return true;
-            }
-        }
-        false
-    }
-
-    pub fn add_rev_edges(&mut self) {
-        for (u, v, w) in self.iter_edges() {
-            self.e_lst[v].insert(u, w);
-        }
-    }
-
-    pub fn make_rev_e_lst(&self) -> Vec<HashMap<usize, W>> {
-        let mut rev_e_lst = vec![HashMap::<usize, W>::new(); self.len()];
-        for (u, v, w) in self.iter_edges() {
-            rev_e_lst[v].insert(u, w);
-        }
-        rev_e_lst
-    }
-
-    pub fn make_undirected_edges(&self) -> Vec<HashMap<usize, W>> {
-        let mut undirected_edges = self.make_rev_e_lst();
-        for (u, v, w) in self.iter_edges() {
-            undirected_edges[u].insert(v, w);
-        }
-        undirected_edges
-    }
-
-    pub fn make_rev_graph(&self) -> Self {
-        Self {
-            v_lst: self.v_lst.clone(),
-            e_lst: self.make_rev_e_lst(),
-        }
-    }
-}
-
-/// Indexing: you can use g[i] to index vertex
-impl<T, W: Weight> Index<usize> for Graph<T, W> {
-    type Output = Vertex<T>;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        self.v_lst.index(index)
-    }
-}
-
-/// A macro to make vertices only label without carrying any id or data
-/// after a graph is made, if you want to change id,
-/// you should both change the id in vertex and the index in graph's v_lst
-#[macro_export]
-macro_rules! add_vertices {
-    ($graph:ident # $($vertex:ident),*) => {
-	$(
-	    let mut $vertex = Vertex::new(stringify!($vertex));
-	    $graph.add_vertex(&mut $vertex);
-	)*
-    }
-}
-
-#[macro_export]
-macro_rules! add_vertices_with_data {
-    ($graph:ident # $($vertex:ident, $data:expr);*) => {
-	$(
-	    let mut $vertex = Vertex::new_with_data(stringify!($vertex), $data);
-	    $graph.add_vertex(&mut $vertex);
-	)*
-    }
-}
-
-// #[macro_export]
-// macro_rules! extract_vertices {
-//     ($graph_iter:ident # $($vertex:ident),*) => {
-// 	$(
-// 	    let $vertex = $graph_iter.next().unwrap().clone();
-// 	)*
-//     }
-// }
-
-#[macro_export]
-macro_rules! add_unweighted_edges {
-    ($graph:ident # $($from:ident: $($to:ident),+);*) => {
-	{
-	    $(
-		let u = $from.clone();
-		$(
-		    $graph.add_edge_directed(&u, &$to.clone(), crate::NoWeight);
-		)+
-	    )*
+    /// this default implemnt use set to promise we only access vertex once
+    /// if your graph can promise in and out degrees share no intersection
+    /// you can reimplement it like:
+    /// Box::new(self.iter_v_from(u).chain(self.iter_v_to(u)))
+    fn iter_v_around(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
+        let mut set: HashSet<usize> = self.iter_v_from(u).collect();
+	for v in self.iter_v_to(u) {
+	    set.insert(v);
 	}
+        Box::new(set.into_iter())
+    }
+
+    /// iter all the edges of the graph
+    fn iter_e_all(&self) -> Box<dyn Iterator<Item = Self::Edge> + '_> {
+        Box::new(self.iter_v_all().flat_map(|u| self.iter_e_from(u)))
+    }
+
+    /// iter all the edges from vertex `u`
+    fn iter_e_from(&self, u: usize) -> Box<dyn Iterator<Item = Self::Edge> + '_>;
+
+    /// iter all the edges to vertex `u`
+    fn iter_e_to(&self, u: usize) -> Box<dyn Iterator<Item = Self::Edge> + '_>;
+
+    /// this default implemnt just is ok, in/out no duplicate edge
+    fn iter_e_around(&self, u: usize) -> Box<dyn Iterator<Item = Self::Edge> + '_> {
+        Box::new(self.iter_e_from(u).chain(self.iter_e_to(u)))
+    }
+}
+
+/// list (the index present the vertex's id) of map (the vertex's all outdegrees)
+/// vertex is first-class element in this struct
+pub struct VGraph<W: Weight> {
+    lst: Vec<HashMap<usize, W>>,
+}
+
+impl<W: Weight> VGraph<W> {
+    pub fn new(lst: Vec<HashMap<usize, W>>) -> Self {
+        Self { lst }
+    }
+
+    // pub fn from_rev_edges<E: Edge>(graph: &impl Graph) -> VGraph<NoWeight> {
+    // 	let n = graph.len();
+    // 	let mut lst = vec![HashMap::new(); n];
+    // 	for e in graph.iter_e_all() {
+    //         lst[e.to()].insert(e.from(), NoWeight);
+    // 	}
+    // 	VGraph::new(lst)
+    // }
+}
+
+impl<W: Weight> Graph for VGraph<W> {
+    type Edge = (usize, usize, W);
+
+    fn len(&self) -> usize {
+        self.lst.len()
+    }
+
+    fn iter_v_from(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
+        Box::new(self.lst[u].keys().cloned())
+    }
+
+    fn iter_v_to(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
+        Box::new(
+            self.iter_v_all()
+                .filter(move |v| self.lst[*v].contains_key(&u)),
+        )
+    }
+
+    fn iter_e_from(&self, u: usize) -> Box<dyn Iterator<Item = Self::Edge> + '_> {
+        Box::new(self.lst[u].iter().map(move |(v, w)| (u, *v, *w)))
+    }
+
+    fn iter_e_to(&self, u: usize) -> Box<dyn Iterator<Item = Self::Edge> + '_> {
+        Box::new(
+            self.iter_v_to(u)
+                .map(move |v| (v, u, *self.lst[v].get(&u).unwrap())),
+        )
+    }
+}
+
+/// list (the index present the vertex's id) of map (the vertex's all outdegrees)
+/// vertex is first-class element in this struct
+/// this data structure is not good at iter vertices
+pub struct EGraph<E: Edge> {
+    e_lst: Vec<E>,          // all edges
+    v_lst: Vec<Vec<usize>>, // ith vertex's all connected edge
+}
+
+impl<E: Edge> Graph for EGraph<E> {
+    type Edge = E;
+
+    fn len(&self) -> usize {
+        self.v_lst.len()
+    }
+
+    fn iter_v_from(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
+        let set: HashSet<usize> = self.iter_e_from(u).map(|e| e.from()).collect();
+        Box::new(set.into_iter())
+    }
+
+    fn iter_v_to(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
+        let set: HashSet<usize> = self.iter_e_to(u).map(|e| e.to()).collect();
+        Box::new(set.into_iter())
+    }
+
+    /// implement by hand is faster
+    fn iter_v_around(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
+        let unq: HashSet<usize> = self
+            .iter_e_around(u)
+            .map(move |e| if e.from() == u { e.to() } else { e.from() })
+            .collect();
+        Box::new(unq.into_iter())
+    }
+
+    /// implement by hand is faster
+    fn iter_e_all(&self) -> Box<dyn Iterator<Item = Self::Edge> + '_> {
+        Box::new(self.e_lst.iter().cloned())
+    }
+
+    fn iter_e_from(&self, u: usize) -> Box<dyn Iterator<Item = Self::Edge> + '_> {
+        Box::new(self.iter_e_around(u).filter(move |e| e.from() == u))
+    }
+
+    fn iter_e_to(&self, u: usize) -> Box<dyn Iterator<Item = Self::Edge> + '_> {
+        Box::new(self.iter_e_around(u).filter(move |e| e.to() == u))
+    }
+
+    fn iter_e_around(&self, u: usize) -> Box<dyn Iterator<Item = Self::Edge> + '_> {
+        Box::new(self.v_lst[u].iter().map(|i| self.e_lst[*i]))
+    }
+}
+
+/// A macro to make vertices from 0..n
+#[macro_export]
+macro_rules! make_vertices {
+    ($($var:ident),+) => {
+	make_vertices_rec!(0, $($var),+);
     };
 }
 
 #[macro_export]
-macro_rules! add_weighted_edges {
-    ($graph:ident # $($from:ident: $(($to:ident, $weight:expr)),+);*) => {
-	{
-	    $(
-		let u = $from.clone();
-		$(
-		    $graph.add_edge_directed(&u, &$to.clone(), $weight);
-		)+
-	    )*
-	}
+macro_rules! make_vertices_rec {
+    ($id:expr, $head:ident, $($tail:ident),*) => {
+	let $head = $id;
+	make_vertices_rec!($id+1, $($tail),*);
+    };
+    ($id:expr, $last:ident) => {
+	let $last = $id;
     };
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::MakeGraph;
 
     #[test]
-    fn test_make_unweighted_graph() {
-        let mut g1: Graph<(), _> = Graph::new();
-        add_vertices!(g1 # a, b, c, d, e, f, g, h, i);
-        add_unweighted_edges!(g1 #
-            a: b, c;
-            b: c, e, i;
-            c: d;
-            d: a, h;
-            e: f;
-            f: g;
-            g: e, i;
-            h: i;
-	    i: h);
-        assert_eq!(i.get_index(), 8);
-        dbg!(&g1);
+    fn test_edge_1() {
+        let g = MakeGraph::scc();
+
+        for v in g.iter_v_from(3) {
+            dbg!(v);
+        }
+
+        println!("-----");
+        for v in g.iter_v_to(3) {
+            dbg!(v);
+        }
+
+        println!("-----");
+        for v in g.iter_e_from(3) {
+            dbg!(v);
+        }
+
+        println!("-----");
+        for e in g.iter_e_to(3) {
+            dbg!(e);
+        }
     }
 
+    #[allow(unused_variables)]
     #[test]
-    fn test_make_weighted_graph() {
-        let mut g2: Graph<(), _> = Graph::new();
-        add_vertices!(g2 # a, b, c, d, e, f, g, h, i);
-        add_weighted_edges!(g2 #
-            a: (b, 4), (h, 8);
-            b: (c, 8), (h, 11);
-            c: (d, 7), (f, 4), (i, 2);
-            d: (e, 9), (f, 14);
-            e: (f, 10);
-            f: (g, 2);
-            g: (h, 1), (i, 6);
-            h: (i, 7));
-        assert_eq!(i.get_index(), 8);
-        dbg!(&g2);
+    fn test_macro() {
+        make_vertices!(a, b, c, d, e, f, g, h, i);
+        assert_eq!(i, 8);
     }
 }

@@ -1,37 +1,38 @@
-use crate::{Graph, Vertex, Weight};
+use crate::{topo_sort_dfs, Edge, Graph, NoWeight, VGraph};
+use std::collections::HashMap;
 
-impl<T, W: Weight> Graph<T, W> {
-    fn scc(&self) -> Vec<Vec<&Vertex<T>>> {
-        let n = self.len();
-        let seq = self.make_rev_graph().topo_sort_dfs();
-        let mut visited = vec![false; n];
-        let mut res = vec![];
+fn scc<G: Graph>(graph: &G) -> Vec<Vec<usize>> {
+    let n = graph.len();
 
-        for i in seq.into_iter().rev() {
-            if !visited[i] {
-                res.push(
-                    DfsIter::new(self, i, &mut visited)
-                        .into_iter()
-                        .map(|j| &self[j])
-                        .collect(),
-                );
-            }
-        }
-        res
+    let mut lst = vec![HashMap::new(); n];
+    for e in graph.iter_e_all() {
+        lst[e.to()].insert(e.from(), NoWeight);
     }
+    let graph_rev = VGraph::new(lst);
+
+    let seq = topo_sort_dfs(&graph_rev);
+    let mut visited = vec![false; n];
+    let mut res = vec![];
+
+    for i in seq.into_iter().rev() {
+        if !visited[i] {
+            res.push(DfsIter::new(graph, i, &mut visited).into_iter().collect());
+        }
+    }
+    res
 }
 
 /// memorized dfs helper
 /// NOTE: the difference between scc and dfs's DfsIter
 /// visted: Vec<bool> vs &'a mut Vec<bool>
-struct DfsIter<'a, T, W: Weight> {
+struct DfsIter<'a, G: Graph> {
     visited: &'a mut Vec<bool>,
     stack: Vec<usize>,
-    graph: &'a Graph<T, W>,
+    graph: &'a G,
 }
 
-impl<'a, T, W: Weight> DfsIter<'a, T, W> {
-    fn new(graph: &'a Graph<T, W>, start: usize, visited: &'a mut Vec<bool>) -> Self {
+impl<'a, G: Graph> DfsIter<'a, G> {
+    fn new(graph: &'a G, start: usize, visited: &'a mut Vec<bool>) -> Self {
         visited[start] = true;
         let stack = vec![start];
         Self {
@@ -42,12 +43,12 @@ impl<'a, T, W: Weight> DfsIter<'a, T, W> {
     }
 }
 
-impl<'a, T, W: Weight> Iterator for DfsIter<'a, T, W> {
+impl<'a, G: Graph> Iterator for DfsIter<'a, G> {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(u) = self.stack.pop() {
-            for v in self.graph.iter_vertices_from(u) {
+            for v in self.graph.iter_v_from(u) {
                 if !self.visited[v] {
                     self.visited[v] = true;
                     self.stack.push(v);
@@ -63,23 +64,11 @@ impl<'a, T, W: Weight> Iterator for DfsIter<'a, T, W> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{add_unweighted_edges, add_vertices};
+    use crate::MakeGraph;
 
     #[test]
     fn test_scc() {
-        let mut g1: Graph<(), _> = Graph::new();
-        add_vertices!(g1 # a, b, c, d, e, f, g, h, i);
-        add_unweighted_edges!(g1 #
-            a: b, c;
-            b: c, e, i;
-            c: d;
-            d: a, h;
-            e: f;
-            f: g;
-            g: e, i;
-            h: i;
-            i: h);
-
-        dbg!(g1.scc());
+        let g = MakeGraph::scc();
+        dbg!(scc(&g));
     }
 }

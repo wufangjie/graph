@@ -1,25 +1,19 @@
-use crate::{Graph, Vertex, Weight};
+use crate::Graph;
 use std::collections::VecDeque;
 
-impl<T, W: Weight> Graph<T, W> {
-    pub fn bfs(&self, start: &Vertex<T>) -> impl Iterator<Item = usize> + '_ {
-        if let Some(u) = self.get_index_of(start) {
-            BfsIter::new(self, u)
-        } else {
-            panic!("Vertex not in this graph");
-        }
-    }
+pub fn bfs<G: Graph>(graph: &G, start: usize) -> impl Iterator<Item = usize> + '_ {
+    BfsIter::new(graph, start)
 }
 
 /// bfs helper
-struct BfsIter<'a, T, W: Weight> {
+struct BfsIter<'a, G: Graph> {
     visited: Vec<bool>,
     queue: VecDeque<usize>,
-    graph: &'a Graph<T, W>,
+    graph: &'a G,
 }
 
-impl<'a, T, W: Weight> BfsIter<'a, T, W> {
-    fn new(graph: &'a Graph<T, W>, start: usize) -> Self {
+impl<'a, G: Graph> BfsIter<'a, G> {
+    fn new(graph: &'a G, start: usize) -> Self {
         let mut visited = vec![false; graph.len()];
         visited[start] = true;
         let mut queue = VecDeque::new();
@@ -32,12 +26,12 @@ impl<'a, T, W: Weight> BfsIter<'a, T, W> {
     }
 }
 
-impl<'a, T, W: Weight> Iterator for BfsIter<'a, T, W> {
+impl<'a, G: Graph> Iterator for BfsIter<'a, G> {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(u) = self.queue.pop_front() {
-            for v in self.graph.iter_vertices_from(u) {
+            for v in self.graph.iter_v_from(u) {
                 if !self.visited[v] {
                     self.visited[v] = true;
                     self.queue.push_back(v);
@@ -53,25 +47,13 @@ impl<'a, T, W: Weight> Iterator for BfsIter<'a, T, W> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{add_unweighted_edges, add_vertices};
+    use crate::MakeGraph;
 
     #[test]
     fn test_bfs() {
-        let mut g1: Graph<(), _> = Graph::new();
-        add_vertices!(g1 # a, b, c, d, e, f, g, h, i);
-        add_unweighted_edges!(g1 #
-            a: b, c;
-            b: c, e, i;
-            c: d;
-            d: a, h;
-            e: f;
-            f: g;
-            g: e, i;
-            h: i;
-            i: h);
-
-        for v in g1.bfs(&a) {
-            dbg!(&g1[v]);
+        let g = MakeGraph::scc();
+        for v in bfs(&g, 0) {
+            dbg!(v);
         }
     }
 }

@@ -1,14 +1,24 @@
 use std::fmt;
 /// this module impl a weight trait, and a NoWeight zero sized type
-use std::ops::{Add, Sub, AddAssign, SubAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-pub trait Weight: Clone + Copy + Default + Add<Output = Self> + Sub<Output = Self> + PartialOrd + AddAssign + SubAssign + fmt::Debug {
+pub trait Weight:
+    Clone
+    + Copy
+    + Default
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + PartialOrd
+    + AddAssign
+    + SubAssign
+    + fmt::Debug
+{
     fn zero() -> Self {
-	Default::default()
+        Default::default()
     }
 
     fn is_zero(&self) -> bool {
-	*self == Self::zero()
+        *self == Self::zero()
     }
 }
 /// since we can not implement Add, Sub trait for ()
@@ -45,7 +55,6 @@ impl AddAssign for NoWeight {
 impl SubAssign for NoWeight {
     fn sub_assign(&mut self, _rhs: Self) {}
 }
-
 
 impl fmt::Display for NoWeight {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

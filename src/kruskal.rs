@@ -1,35 +1,38 @@
-use crate::{Graph, Vertex, Weight};
+use crate::{Graph, Weight, WeightedEdge};
 use std::cmp::Ordering;
 //use std::collections::BinaryHeap;
 use utils::Heap;
 
-impl<T, W: Weight> Graph<T, W> {
-    /// NOTE: kruskal can process directed graph (which will be more efficient)
-    /// since we need the spanning tree, return Vec rather Iterator
-    /// O(ElogV)
-    pub fn kruskal(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
-        let mut heap = Heap::from(
-            self.iter_edges()
-                .into_iter()
-                .map(|(u, v, w)| (w, u, v))
-                .collect::<Vec<(W, usize, usize)>>(),
-        );
+/// NOTE: kruskal can process directed graph (which will be more efficient)
+/// since we need the spanning tree, return Vec rather Iterator
+/// O(ElogV)
+pub fn kruskal<W, E, G>(graph: &G) -> Vec<(W, usize, usize)>
+where
+    W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
+{
+    let mut heap = Heap::from(
+        graph
+            .iter_e_all()
+            .map(|e| (e.weight(), e.from(), e.to()))
+            .collect::<Vec<(W, usize, usize)>>(),
+    );
 
-        let n = self.len();
-        let mut count = 0;
-        let mut ds = DisjointSet::new(n);
-        let mut res = Vec::with_capacity(n - 1);
-        while let Some((w, u, v)) = heap.pop() {
-            if ds.union(u, v) {
-                count += 1;
-                res.push((w, &self[u], &self[v]));
-                if count == n - 1 {
-                    break;
-                }
+    let n = graph.len();
+    let mut count = 0;
+    let mut ds = DisjointSet::new(n);
+    let mut res = Vec::with_capacity(n - 1);
+    while let Some((w, u, v)) = heap.pop() {
+        if ds.union(u, v) {
+            count += 1;
+            res.push((w, u, v));
+            if count == n - 1 {
+                break;
             }
         }
-        res
     }
+    res
 }
 
 struct Node {
@@ -84,22 +87,13 @@ impl DisjointSet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{add_vertices, add_weighted_edges};
+    use crate::MakeGraph;
 
     #[test]
     fn test_kruskal() {
-        let mut g2: Graph<(), _> = Graph::new();
-        add_vertices!(g2 # a, b, c, d, e, f, g, h, i);
-        add_weighted_edges!(g2 #
-            a: (b, 4), (h, 8);
-            b: (c, 8), (h, 11);
-            c: (d, 7), (f, 4), (i, 2);
-            d: (e, 9), (f, 14);
-            e: (f, 10);
-            f: (g, 2);
-            g: (h, 1), (i, 6);
-            h: (i, 7));
-
-        dbg!(g2.kruskal());
+        let g = MakeGraph::mst(false);
+        let res = kruskal(&g);
+        assert_eq!(res.iter().map(|(w, _u, _v)| *w).sum::<i32>(), 37);
+        dbg!(res);
     }
 }

@@ -1,58 +1,63 @@
-use crate::{Graph, Vertex, Weight};
-
-use std::collections::HashMap;
+use crate::{Graph, Weight, WeightedEdge};
 use utils::Heap;
 
-impl<T, W: Weight> Graph<T, W> {
-    /// run prim on directed graph
-    /// it is only can be used on the graph,
-    /// which exist (a -> b: w) then (b -> a: w),
-    /// otherwise we will get bad result
-    /// it is faster than prim(), since we needn't to add reverse edges
-    /// NOTE: this method used the specail structure of graph
-    /// O((E+V)logV)
-    fn prim_directed(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
-        PrimIter::new(&self.e_lst)
-            .map(|(w, u, v)| (w, &self[u], &self[v]))
-            .collect::<Vec<(W, &Vertex<T>, &Vertex<T>)>>()
-    }
-
-    fn prim(&self) -> Vec<(W, &Vertex<T>, &Vertex<T>)> {
-        let undirected_edges = self.make_undirected_edges();
-        PrimIter::new(&undirected_edges)
-            .map(|(w, u, v)| (w, &self[u], &self[v]))
-            .collect::<Vec<(W, &Vertex<T>, &Vertex<T>)>>()
-    }
+/// run prim on directed graph (need to add reverse edges)
+/// it is only can be used on the graph,
+/// which exist (a -> b: w) then (b -> a: w),
+/// otherwise we will get bad result
+/// O((E+V)logV)
+pub fn prim<W, E, G>(graph: &G) -> Vec<(W, usize, usize)>
+where
+    W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
+{
+    PrimIter::new(graph).collect()
 }
 
-struct PrimIter<'a, W: Weight> {
-    edges: &'a Vec<HashMap<usize, W>>,
+struct PrimIter<'a, W, E, G>
+where
+    W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
+{
+    graph: &'a G, //Vec<HashMap<usize, W>>,
     used: Vec<bool>,
     heap: Heap<(W, usize, usize)>,
 }
 
-impl<'a, W: Weight> PrimIter<'a, W> {
-    fn new(edges: &'a Vec<HashMap<usize, W>>) -> Self {
+impl<'a, W, E, G> PrimIter<'a, W, E, G>
+where
+    W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
+{
+    fn new(graph: &'a G) -> Self {
         let start = 0;
         let mut heap = Heap::new();
-        for (&v, &w) in &edges[start] {
-            heap.push((w, v, start));
+        for e in graph.iter_e_from(start) {
+            heap.push((e.weight(), e.to(), e.from()));
         }
-        let mut used = vec![false; edges.len()];
+        let mut used = vec![false; graph.len()];
         used[start] = true;
-        Self { edges, used, heap }
+        Self { graph, used, heap }
     }
 }
 
-impl<'a, W: Weight> Iterator for PrimIter<'a, W> {
+impl<'a, W, E, G> Iterator for PrimIter<'a, W, E, G>
+where
+    W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
+{
     type Item = (W, usize, usize);
 
     fn next(&mut self) -> Option<(W, usize, usize)> {
         while let Some((w, u, v)) = self.heap.pop() {
             if !self.used[u] {
                 self.used[u] = true;
-                for (&v, &w) in &self.edges[u] {
-                    self.heap.push((w, v, u));
+                for e in self.graph.iter_e_from(u) {
+                    self.heap.push((e.weight(), e.to(), e.from()));
                 }
                 return Some((w, u, v)); // NOTE: v, w is ok
             }
@@ -64,28 +69,13 @@ impl<'a, W: Weight> Iterator for PrimIter<'a, W> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{add_vertices, add_weighted_edges};
+    use crate::MakeGraph;
 
     #[test]
     fn test_prim() {
-        let mut g2: Graph<(), _> = Graph::new();
-        add_vertices!(g2 # a, b, c, d, e, f, g, h, i);
-        add_weighted_edges!(g2 #
-            a: (b, 4), (h, 8);
-            b: (c, 8), (h, 11);
-            c: (d, 7), (f, 4), (i, 2);
-            d: (e, 9), (f, 14);
-            e: (f, 10);
-            f: (g, 2);
-            g: (h, 1), (i, 6);
-            h: (i, 7));
-
-        dbg!(&g2.prim());
-
-        let mut g3 = g2.clone();
-        dbg!(&g3.prim_directed());
-
-        g3.add_rev_edges();
-        dbg!(&g3.prim_directed());
+        let g = MakeGraph::mst(true);
+        let res = prim(&g);
+        assert_eq!(res.iter().map(|(w, _u, _v)| *w).sum::<i32>(), 37);
+        dbg!(res);
     }
 }
