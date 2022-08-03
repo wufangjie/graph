@@ -1,7 +1,7 @@
-use crate::{topo_sort_dfs, Edge, Graph, NoWeight, VGraph};
+use crate::{Edge, Graph, NoWeight, VGraph}; // topo_sort_dfs,
 use std::collections::HashMap;
 
-fn scc<G: Graph>(graph: &G) -> Vec<Vec<usize>> {
+pub fn scc<G: Graph>(graph: &G) -> Vec<Vec<usize>> {
     let n = graph.len();
 
     let mut lst = vec![HashMap::new(); n];
@@ -10,7 +10,7 @@ fn scc<G: Graph>(graph: &G) -> Vec<Vec<usize>> {
     }
     let graph_rev = VGraph::new(lst);
 
-    let seq = topo_sort_dfs(&graph_rev);
+    let seq = graph_rev.topo_sort_dfs();
     let mut visited = vec![false; n];
     let mut res = vec![];
 
@@ -63,12 +63,17 @@ impl<'a, G: Graph> Iterator for DfsIter<'a, G> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::MakeGraph;
 
     #[test]
     fn test_scc() {
-        let g = MakeGraph::scc();
-        dbg!(scc(&g));
+        let (g, s_lst) = MakeGraph::scc();
+        for (i, part) in g.scc().into_iter().enumerate() {
+            print!("\npart {}: ", i);
+            for v in part {
+                print!("{}, ", s_lst[v]);
+            }
+            println!();
+        }
     }
 }

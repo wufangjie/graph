@@ -54,3 +54,12 @@ may be make an Edge trait is good choice (but how can a trait method return impl
 
 #+CAPTION: graph for testing: maxflow
 [[./data/mf.png]]
+
+* graph trait seem not good
+
+sometimes we need iter_mut to mutate edge,
+while the normal edge (usize, usize, W) will not be stored in VGraph's data structure
+
+trait object will add runtime cost
+
+maybe use serveral same name methods are good choice

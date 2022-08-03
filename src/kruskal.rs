@@ -86,14 +86,15 @@ impl DisjointSet {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::MakeGraph;
 
     #[test]
     fn test_kruskal() {
-        let g = MakeGraph::mst(false);
-        let res = kruskal(&g);
+        let (g, s_lst) = MakeGraph::mst(false);
+        let res = g.kruskal();
         assert_eq!(res.iter().map(|(w, _u, _v)| *w).sum::<i32>(), 37);
-        dbg!(res);
+        for (w, u, v) in res.into_iter() {
+            println!("weight: {}, from: {}, to: {}", w, s_lst[u], s_lst[v]);
+        }
     }
 }

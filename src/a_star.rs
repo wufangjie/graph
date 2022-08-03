@@ -1,51 +1,50 @@
-use crate::{Graph, Vertex, Weight};
+use crate::{Graph, Weight, WeightedEdge};
 
-use std::collections::HashMap;
 use utils::Heap;
 
-impl<'a, T, W: Weight> Graph<T, W> {
-    /// the difference between dijstra and prim's algorithm:
-    /// 1. dijstra need to specify a start vertex, while prim needn't
-    /// 2. the weight push to the heap: d + w vs w
-    /// 3. [NOT Algorithm] dijkstra works on directed graph, while prim on undirected graph
-    fn a_star(
-        &'a self,
-        start: &Vertex<T>,
-        func: impl Fn(usize) -> W + 'a,
-    ) -> impl Iterator<Item = (W, usize, usize)> + 'a {
-        if let Some(u) = self.get_index_of(start) {
-            AStarIter::new(&self.e_lst, u, func)
-        } else {
-            panic!("Vertex not in this graph");
-        }
-    }
-}
-
-struct AStarIter<'a, W, F>
+/// the difference between dijstra and prim's algorithm:
+/// 1. dijstra need to specify a start vertex, while prim needn't
+/// 2. the weight push to the heap: d + w vs w
+/// 3. [NOT Algorithm] dijkstra works on directed graph, while prim on undirected graph
+pub fn a_star<W, E, G, F>(graph: &G, start: usize, func: F) -> AStarIter<W, E, G, F>
 where
     W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
     F: Fn(usize) -> W,
 {
-    edges: &'a Vec<HashMap<usize, W>>,
+    AStarIter::new(graph, start, func)
+}
+
+pub struct AStarIter<'a, W, E, G, F>
+where
+    W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
+    F: Fn(usize) -> W,
+{
+    graph: &'a G, //Vec<HashMap<usize, W>>,
     used: Vec<bool>,
     heap: Heap<(W, usize, usize)>,
     func: F,
 }
 
-impl<'a, W, F> AStarIter<'a, W, F>
+impl<'a, W, E, G, F> AStarIter<'a, W, E, G, F>
 where
     W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
     F: Fn(usize) -> W,
 {
-    fn new(edges: &'a Vec<HashMap<usize, W>>, start: usize, func: F) -> Self {
+    fn new(graph: &'a G, start: usize, func: F) -> Self {
         let mut heap = Heap::new();
-        for (&v, &w) in &edges[start] {
-            heap.push((w + func(v), v, start));
+        for e in graph.iter_e_from(start) {
+            heap.push((e.weight() + func(e.to()), e.to(), start));
         }
-        let mut used = vec![false; edges.len()];
+        let mut used = vec![false; graph.len()];
         used[start] = true;
         Self {
-            edges,
+            graph,
             used,
             heap,
             func,
@@ -53,9 +52,11 @@ where
     }
 }
 
-impl<'a, W, F> Iterator for AStarIter<'a, W, F>
+impl<'a, W, E, G, F> Iterator for AStarIter<'a, W, E, G, F>
 where
     W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
     F: Fn(usize) -> W,
 {
     type Item = (W, usize, usize);
@@ -65,7 +66,9 @@ where
             if !self.used[u] {
                 self.used[u] = true;
                 let hu = (self.func)(u);
-                for (&v, &w) in &self.edges[u] {
+                for e in self.graph.iter_e_from(u) {
+                    let w = e.weight();
+                    let v = e.to();
                     self.heap.push((d + w - hu + (self.func)(v), v, u));
                 }
                 return Some((d - hu, u, v));
@@ -77,55 +80,23 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{add_vertices_with_data, add_weighted_edges};
+    use crate::MakeGraph;
 
     #[test]
     fn test_a_star() {
-        let mut g9: Graph<(f64, f64), f64> = Graph::new();
+        let (g, s_lst, xy) = MakeGraph::spa();
 
-        add_vertices_with_data!(g9 #
-            a, (0., 0.);
-            b, (1., 0.);
-            c, (2., 0.);
-            d, (3., 0.);
-            e, (0., 1.);
-            f, (1., 1.);
-            g, (2., 1.);
-            h, (3., 1.);
-            i, (0., 2.);
-            j, (1., 2.);
-            k, (2., 2.);
-            l, (3., 2.));
-
-        add_weighted_edges!(g9 #
-            a: (b, 1.1), (e, 1.0);
-            b: (f, 1.0), (c, 2.0);
-            c: (g, 2.0), (d, 3.0);
-            d: (h, 1.0);
-            e: (f, 2.0), (i, 1.0);
-            f: (g, 3.0), (j, 2.0);
-            g: (h, 1.0), (k, 1.0);
-            h: (l, 2.0);
-            i: (j, 3.0);
-            j: (k, 1.0);
-            k: (l, 2.0)
-        );
-
-        // dbg!(&g9);
-
-        g9.add_rev_edges();
-
-        println!("All distance from {:?}:", &a);
-        let calc_dist = |u| {
-            let (x0, y0) = &l.borrow().data;
-            let (x1, y1) = g9[u].borrow().data;
+        println!("All distances from: {}", s_lst[0]); // `s`
+        let calc_dist_to_t = move |u| {
+            let (x0, y0): (f64, f64) = xy[6]; // `t`'s xy
+            let (x1, y1): (f64, f64) = xy[u];
             ((x1 - x0).powi(2) + (y1 - y0).powi(2)).powf(0.5)
         };
-        for (w, u, v) in g9.a_star(&a, calc_dist) {
+
+        for (w, u, v) in g.a_star(0, calc_dist_to_t) {
             println!(
-                "distance: {:.4}, to: {:?}, direct from: {:?}",
-                w, &g9[u], &g9[v]
+                "to: {}, directly from: {}, distance: {:.1}",
+                s_lst[u], s_lst[v], w
             );
         }
     }

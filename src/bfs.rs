@@ -51,9 +51,9 @@ mod tests {
 
     #[test]
     fn test_bfs() {
-        let g = MakeGraph::scc();
-        for v in bfs(&g, 0) {
-            dbg!(v);
+        let (g, s_lst) = MakeGraph::scc();
+        for v in g.bfs(0) {
+            dbg!(s_lst[v]);
         }
     }
 }

@@ -1,6 +1,7 @@
 /// One trait: Graph
 /// Two kinds of struct which implemnted Graph trait: VGraph, EGraph
-use crate::{Edge, Weight};
+/// serveral macros:
+use crate::{Edge, Weight, WeightedEdge};
 use std::collections::{HashMap, HashSet};
 
 /// all `u` in this trait's method may >= self.len(), this may panic
@@ -23,6 +24,10 @@ pub trait Graph {
     /// iter all the vertices from vertex `u`
     fn iter_v_from(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_>;
 
+    fn count_v_from(&self, u: usize) -> usize {
+	self.iter_v_from(u).count()
+    }
+
     /// iter all the vertices to vertex `u`
     fn iter_v_to(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_>;
 
@@ -32,9 +37,9 @@ pub trait Graph {
     /// Box::new(self.iter_v_from(u).chain(self.iter_v_to(u)))
     fn iter_v_around(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
         let mut set: HashSet<usize> = self.iter_v_from(u).collect();
-	for v in self.iter_v_to(u) {
-	    set.insert(v);
-	}
+        for v in self.iter_v_to(u) {
+            set.insert(v);
+        }
         Box::new(set.into_iter())
     }
 
@@ -55,8 +60,9 @@ pub trait Graph {
     }
 }
 
-/// list (the index present the vertex's id) of map (the vertex's all outdegrees)
-/// vertex is first-class element in this struct
+/// list of map
+/// ith HashMap means: ith vertex's all outdegrees
+/// vertex is the first-class element in this struct
 pub struct VGraph<W: Weight> {
     lst: Vec<HashMap<usize, W>>,
 }
@@ -87,6 +93,11 @@ impl<W: Weight> Graph for VGraph<W> {
         Box::new(self.lst[u].keys().cloned())
     }
 
+    /// faster than default
+    fn count_v_from(&self, u: usize) -> usize {
+	self.lst[u].len()
+    }
+
     fn iter_v_to(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
         Box::new(
             self.iter_v_all()
@@ -106,15 +117,38 @@ impl<W: Weight> Graph for VGraph<W> {
     }
 }
 
-/// list (the index present the vertex's id) of map (the vertex's all outdegrees)
-/// vertex is first-class element in this struct
-/// this data structure is not good at iter vertices
-pub struct EGraph<E: Edge> {
+/// edge is the first-class element in this struct,
+/// it is not good at iter vertices (using HashSet to promise uniqueness)
+pub struct EGraph<W, E>
+where
+    W: Weight,
+    E: WeightedEdge<W>
+{
     e_lst: Vec<E>,          // all edges
     v_lst: Vec<Vec<usize>>, // ith vertex's all connected edge
+    phantom: std::marker::PhantomData<W>,
 }
 
-impl<E: Edge> Graph for EGraph<E> {
+impl<W, E> EGraph<W, E>
+where
+    W: Weight,
+    E: WeightedEdge<W>
+{
+    pub fn new(e_lst: Vec<E>, n: usize) -> Self {
+	let mut v_lst = vec![vec![]; n];
+	for (i, e) in e_lst.iter().enumerate() {
+	    v_lst[e.from()].push(i);
+	    v_lst[e.to()].push(i);
+	}
+	Self { e_lst, v_lst, phantom: std::marker::PhantomData }
+    }
+}
+
+impl<W, E> Graph for EGraph<W, E>
+where
+    W: Weight,
+    E: WeightedEdge<W>
+{
     type Edge = E;
 
     fn len(&self) -> usize {
@@ -133,11 +167,11 @@ impl<E: Edge> Graph for EGraph<E> {
 
     /// implement by hand is faster
     fn iter_v_around(&self, u: usize) -> Box<dyn Iterator<Item = usize> + '_> {
-        let unq: HashSet<usize> = self
+        let set: HashSet<usize> = self
             .iter_e_around(u)
             .map(move |e| if e.from() == u { e.to() } else { e.from() })
             .collect();
-        Box::new(unq.into_iter())
+        Box::new(set.into_iter())
     }
 
     /// implement by hand is faster
@@ -166,6 +200,7 @@ macro_rules! make_vertices {
     };
 }
 
+/// helper macro for make_vertices, needn't call it by hand
 #[macro_export]
 macro_rules! make_vertices_rec {
     ($id:expr, $head:ident, $($tail:ident),*) => {
@@ -177,6 +212,39 @@ macro_rules! make_vertices_rec {
     };
 }
 
+// #[macro_export]
+// macro_rules! make_symbol_lst {
+//     ($($var:ident),+) => {
+// 	{
+// 	    let mut s_lst = vec![];
+// 	    $(
+// 		s_lst.push(stringify!($var));
+// 	    )*
+// 	    let set = s_lst.iter().collect::<std::collections::HashSet<_>>();
+// 	    if set.len() != s_lst.len() {
+// 		println!("Warning: Duplicated Symbols Occured!");
+// 	    }
+// 	    s_lst
+// 	}
+//     };
+// }
+
+/// make vertex symbols for more ergonomic result presenting
+#[macro_export]
+macro_rules! make_symbol_lst {
+    ($($var:ident),+) => {
+	{
+	    let s_lst = vec![$(stringify!($var),)*];
+	    let set = s_lst.iter().collect::<std::collections::HashSet<_>>();
+	    if set.len() != s_lst.len() {
+		println!("Warning: Duplicated Symbols Occured!");
+	    }
+	    s_lst
+	}
+    };
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -184,24 +252,26 @@ mod tests {
 
     #[test]
     fn test_edge_1() {
-        let g = MakeGraph::scc();
+        let (g, s_lst) = MakeGraph::scc();
 
-        for v in g.iter_v_from(3) {
-            dbg!(v);
+        let u = 3;
+        println!("iter vertices from: `{}`", s_lst[u]);
+        for v in g.iter_v_from(u) {
+            dbg!(s_lst[v]);
         }
 
-        println!("-----");
-        for v in g.iter_v_to(3) {
-            dbg!(v);
+        println!("iter vertices to: `{}`", s_lst[u]);
+        for v in g.iter_v_to(u) {
+            dbg!(s_lst[v]);
         }
 
-        println!("-----");
-        for v in g.iter_e_from(3) {
-            dbg!(v);
+        println!("iter edges from: `{}`", s_lst[u]);
+        for e in g.iter_e_from(u) {
+            dbg!(e);
         }
 
-        println!("-----");
-        for e in g.iter_e_to(3) {
+        println!("iter edges to: `{}`", s_lst[u]);
+        for e in g.iter_e_to(u) {
             dbg!(e);
         }
     }
@@ -211,5 +281,8 @@ mod tests {
     fn test_macro() {
         make_vertices!(a, b, c, d, e, f, g, h, i);
         assert_eq!(i, 8);
+
+        let s_lst = make_symbol_lst!(a, b, c, d, e, f, g, h, i, b);
+        dbg!(s_lst);
     }
 }

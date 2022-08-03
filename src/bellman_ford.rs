@@ -1,77 +1,64 @@
-use crate::{Graph, Vertex, Weight};
+use crate::{Graph, Weight, WeightedEdge};
 
-impl<T, W: Weight> Graph<T, W> {
-    /// return (no negative cycle?, dist, from)
-    /// unlike dijkstra iter, we will get start vertex in returned result
-    /// so we should skip start vertex by hand
-    /// TODO: a better way to init distance list: use inf (how?), or Option, or HashMap?
-    /// O(VE)
-    /// NOTE: we can not keep a stack to implement a greedy update, which counting
-    /// the number of any vertex's update times then return if any of them == n
-    /// The correctness of bellman ford: the path from one vertex to another is at most V - 1, and we need one more time to check if negative cycle exist
-    pub fn bellman_ford(&self, start: &Vertex<T>) -> (bool, Vec<Option<W>>, Vec<usize>) {
-        let s = self
-            .get_index_of(start)
-            .expect("Start vertex not in this graph");
-        let n = self.len();
+/// return (no negative cycle?, dist, from)
+/// O(VE)
+/// The correctness of bellman ford: the count of edges of the shortestpath
+/// from one vertex to another is at most V - 1,
+/// and we need one more time to check if negative cycle exist
+pub fn bellman_ford<W, E, G>(graph: &G, start: usize) -> (bool, Vec<Option<W>>, Vec<usize>)
+where
+    W: Weight,
+    E: WeightedEdge<W>,
+    G: Graph<Edge = E>,
+{
+    let n = graph.len();
 
-        let mut dist = vec![None; n];
-        dist[s] = Some(Default::default());
-        let mut from = vec![s; n];
+    let mut dist = vec![None; n];
+    dist[start] = Some(Default::default());
+    let mut from = vec![start; n];
 
-        for _ in 0..n {
-            let mut improved = false;
-            for u in 0..n {
-                for (&v, &w) in &self.e_lst[u] {
-                    // so-called relax
-                    if let Some(d) = dist[u] {
-                        let can_improve = match dist[v] {
-                            None => true,
-                            Some(d0) => d + w < d0,
-                        };
-                        if can_improve {
-                            from[v] = u;
-                            dist[v] = Some(d + w);
-                            improved = true;
-                        }
+    for _ in 0..n {
+        let mut improved = false;
+        for u in 0..n {
+            for e in graph.iter_e_from(u) {
+                let v = e.to();
+                let w = e.weight();
+                if let Some(d) = dist[u] {
+                    let can_improve = match dist[v] {
+                        None => true,
+                        Some(d0) => d + w < d0,
+                    };
+                    if can_improve {
+                        from[v] = u;
+                        dist[v] = Some(d + w);
+                        improved = true;
                     }
                 }
             }
-            if !improved {
-                return (true, dist, from);
-            }
         }
-        (false, dist, from)
+        if !improved {
+            return (true, dist, from);
+        }
     }
+    (false, dist, from)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{add_vertices, add_weighted_edges};
+    use crate::MakeGraph;
 
     #[test]
     fn test_bellman_ford() {
-        let mut g2: Graph<(), _> = Graph::new();
-        add_vertices!(g2 # a, b, c, d, e, f, g, h, i);
-        add_weighted_edges!(g2 #
-            a: (b, 4), (h, 8);
-            b: (c, 8), (h, 11);
-            c: (d, 7), (f, 4), (i, 2);
-            d: (e, 9), (f, 14);
-            e: (f, 10);
-            f: (g, 2);
-            g: (h, 1), (i, 6);
-            h: (i, 7));
-        g2.add_rev_edges();
+        let (g, s_lst) = MakeGraph::mst(true);
 
-        let (s, dist, from) = g2.bellman_ford(&h);
-        println!("All distance from {}:", &h);
-        println!("No negative cycle: {}:", s);
-        for i in 0..g2.len() {
+        let u = 7;
+        let (state, dist, from) = g.bellman_ford(u);
+        println!("All distance from {}:", s_lst[u]);
+        println!("No negative cycle: {}", state);
+        for i in 0..dist.len() {
             println!(
-                "{}, dist: {:?}, directly from: {}",
-                &g2[i], dist[i], &g2[from[i]]
+                "to: {}, directly from: {}, distance: {:?}",
+                s_lst[i], s_lst[from[i]], dist[i]
             )
         }
     }

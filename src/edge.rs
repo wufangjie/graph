@@ -11,7 +11,6 @@ pub trait WeightedEdge<W: Weight>: Edge {
     fn weight(&self) -> W;
 }
 
-
 /// most common edge: (from, to, weight) tuple
 // type WeightedEdge<W: Weight> = (usize, usize, W); // no bound needed
 impl<W: Weight> Edge for (usize, usize, W) {
@@ -26,21 +25,22 @@ impl<W: Weight> Edge for (usize, usize, W) {
 
 impl<W: Weight> WeightedEdge<W> for (usize, usize, W) {
     fn weight(&self) -> W {
-	self.2
+        self.2
     }
 }
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
-struct FlowEdge<W: Weight> {
-    from: usize,
-    to: usize,
-    cap: W,
-    flow: W,
+pub struct FlowEdge<W: Weight> {
+    pub(crate) from: usize,
+    pub(crate) to: usize,
+    pub(crate) cap: W,
+    pub(crate) flow: W,
 }
 
 impl<W: Weight> FlowEdge<W> {
-    fn new(from: usize, to: usize, cap: W, flow: W) -> Self {
+    pub fn new(from: usize, to: usize, flow: W) -> Self {
+	let cap = flow;
         Self {
             from,
             to,
@@ -62,14 +62,13 @@ impl<W: Weight> Edge for FlowEdge<W> {
 
 impl<W: Weight> WeightedEdge<W> for FlowEdge<W> {
     fn weight(&self) -> W {
-	self.flow
+        self.flow
     }
 }
 
-
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
-struct CostFlowEdge<C: Weight, W: Weight> {
+pub struct CostFlowEdge<C: Weight, W: Weight> {
     from: usize,
     to: usize,
     cost: C,
@@ -78,7 +77,8 @@ struct CostFlowEdge<C: Weight, W: Weight> {
 }
 
 impl<C: Weight, W: Weight> CostFlowEdge<C, W> {
-    fn new(from: usize, to: usize, cost: C, cap: W, flow: W) -> Self {
+    pub fn new(from: usize, to: usize, cost: C, flow: W) -> Self {
+	let cap = flow;
         Self {
             from,
             to,
@@ -99,9 +99,8 @@ impl<C: Weight, W: Weight> Edge for CostFlowEdge<C, W> {
     }
 }
 
-
 impl<C: Weight, W: Weight> WeightedEdge<W> for CostFlowEdge<C, W> {
     fn weight(&self) -> W {
-	self.flow
+        self.flow
     }
 }

@@ -112,15 +112,15 @@ mod tests {
 
     #[test]
     fn test_dfs() {
-        let g = MakeGraph::scc();
-        for v in dfs(&g, 0) {
-            dbg!(v);
+        let (g, s_lst) = MakeGraph::scc();
+        for v in g.dfs(0) {
+            dbg!(s_lst[v]);
         }
 
         println!("{:->20}", "");
 
-        for v in iddfs(&g, 0) {
-            dbg!(v);
+        for v in g.iddfs(0) {
+            dbg!(s_lst[v]);
         }
     }
 }

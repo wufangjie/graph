@@ -36,7 +36,7 @@ where
         let start = 0;
         let mut heap = Heap::new();
         for e in graph.iter_e_from(start) {
-            heap.push((e.weight(), e.to(), e.from()));
+            heap.push((e.weight(), e.to(), start));
         }
         let mut used = vec![false; graph.len()];
         used[start] = true;
@@ -57,7 +57,7 @@ where
             if !self.used[u] {
                 self.used[u] = true;
                 for e in self.graph.iter_e_from(u) {
-                    self.heap.push((e.weight(), e.to(), e.from()));
+                    self.heap.push((e.weight(), e.to(), u));
                 }
                 return Some((w, u, v)); // NOTE: v, w is ok
             }
@@ -68,14 +68,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::MakeGraph;
 
     #[test]
     fn test_prim() {
-        let g = MakeGraph::mst(true);
-        let res = prim(&g);
+        let (g, s_lst) = MakeGraph::mst(true);
+        let res = g.prim();
         assert_eq!(res.iter().map(|(w, _u, _v)| *w).sum::<i32>(), 37);
-        dbg!(res);
+        for (w, u, v) in res.into_iter() {
+            println!("weight: {}, from: {}, to: {}", w, s_lst[u], s_lst[v]);
+        }
     }
 }

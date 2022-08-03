@@ -78,17 +78,17 @@ mod tests {
 
     #[test]
     fn test_topo_sort_rc() {
-        let g = MakeGraph::mst(false);
-        for v in topo_sort_rc(&g) {
-            dbg!(v);
+        let (g, s_lst) = MakeGraph::mst(false);
+        for v in g.topo_sort_rc() {
+            dbg!(s_lst[v]);
         }
     }
 
     #[test]
     fn test_topo_sort_dfs() {
-        let g = MakeGraph::scc();
-        for v in topo_sort_dfs(&g) {
-            dbg!(v);
+        let (g, s_lst) = MakeGraph::scc();
+        for v in g.topo_sort_dfs() {
+            dbg!(s_lst[v]);
         }
     }
 }
