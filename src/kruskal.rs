@@ -1,4 +1,4 @@
-use crate::{Graph, Weight, WeightedEdge};
+use crate::Graph;
 use std::cmp::Ordering;
 //use std::collections::BinaryHeap;
 use utils::Heap;
@@ -6,20 +6,16 @@ use utils::Heap;
 /// NOTE: kruskal can process directed graph (which will be more efficient)
 /// since we need the spanning tree, return Vec rather Iterator
 /// O(ElogV)
-pub fn kruskal<W, E, G>(graph: &G) -> Vec<(W, usize, usize)>
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
-    let mut heap = Heap::from(
-        graph
-            .iter_e_all()
-            .map(|e| (e.weight(), e.from(), e.to()))
-            .collect::<Vec<(W, usize, usize)>>(),
-    );
-
+pub fn kruskal<G: Graph>(graph: &G) -> Vec<(G::Weight, usize, usize)> {
     let n = graph.len();
+    let mut heap = vec![];
+    for u in 0..n {
+        for (v, w) in graph.iter_e_from(u) {
+            heap.push((w, u, v));
+        }
+    }
+    let mut heap = Heap::from(heap);
+
     let mut count = 0;
     let mut ds = DisjointSet::new(n);
     let mut res = Vec::with_capacity(n - 1);

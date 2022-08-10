@@ -1,4 +1,4 @@
-use crate::{Edge, Graph};
+use crate::Graph;
 
 /// return partial topological order
 /// i.e. res.len() maybe not equal to graph.len()
@@ -7,9 +7,12 @@ pub fn topo_sort_rc<G: Graph>(graph: &G) -> Vec<usize> {
     let n = graph.len();
     let mut count = vec![0; n];
     let mut backward = vec![vec![]; n];
-    for e in graph.iter_e_all() {
-        count[e.from()] += 1;
-        backward[e.to()].push(e.from());
+
+    for (u, count_u) in count.iter_mut().enumerate() {
+        for v in graph.iter_v_from(u) {
+            *count_u += 1;
+            backward[v].push(u);
+        }
     }
 
     let mut stack = vec![];
@@ -73,7 +76,6 @@ pub fn topo_sort_dfs<G: Graph>(graph: &G) -> Vec<usize> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::MakeGraph;
 
     #[test]

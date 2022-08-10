@@ -1,12 +1,15 @@
-use crate::{Edge, Graph, NoWeight, VGraph}; // topo_sort_dfs,
+use crate::{Graph, NoWeight, VGraph}; // topo_sort_dfs,
 use std::collections::HashMap;
 
 pub fn scc<G: Graph>(graph: &G) -> Vec<Vec<usize>> {
     let n = graph.len();
 
+    // use the simplest VGraph (to reverse) no matter graph is
     let mut lst = vec![HashMap::new(); n];
-    for e in graph.iter_e_all() {
-        lst[e.to()].insert(e.from(), NoWeight);
+    for u in 0..n {
+        for v in graph.iter_v_from(u) {
+            lst[v].insert(u, NoWeight);
+        }
     }
     let graph_rev = VGraph::new(lst);
 

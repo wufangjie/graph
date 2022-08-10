@@ -1,4 +1,4 @@
-use crate::{Graph, VGraph, Weight, WeightedEdge};
+use crate::Graph;
 
 use std::collections::HashMap;
 
@@ -7,15 +7,10 @@ use std::collections::HashMap;
 /// just select one vertex from each matching:
 /// if one vertex has an edge connect (in/out) to a free vertex, select it
 /// both of vertices connect to free vertices will not happen (no augmenting path existed)
-pub fn bipartite_match<W, E, G>(graph: &G) -> HashMap<usize, usize>
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+pub fn bipartite_match<G: Graph>(graph: &G) -> HashMap<usize, usize> {
     let mut matching = HashMap::new();
     for u in 0..graph.len() {
-        if graph.count_v_from(u) > 0 {
+        if !graph.is_empty_from(u) {
             bipartite_augment(graph, &mut matching, u);
         }
     }
@@ -24,18 +19,13 @@ where
 
 /// this implement used dfs to find an augmenting path (using stack),
 /// you can use bfs as alternative, (change stack to queue)
-fn bipartite_augment<W, E, G>(graph: &G, matching: &mut HashMap<usize, usize>, start: usize)
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+fn bipartite_augment<G: Graph>(graph: &G, matching: &mut HashMap<usize, usize>, start: usize) {
     // step1: find augmenting path
     let mut stack = vec![start];
     let mut path = HashMap::new();
     let mut found = usize::MAX;
     while let Some(u) = stack.pop() {
-        if graph.count_v_from(u) == 0 {
+        if graph.is_empty_from(u) {
             // self.e_lst[u].is_empty()
             if let Some(&v) = matching.get(&u) {
                 // always can visit once (from matching cancel)
@@ -47,7 +37,7 @@ where
             }
         } else {
             for v in graph.iter_v_from(u) {
-                //self.e_lst[u].keys() {
+                // self.e_lst[u].keys() {
                 path.entry(v).or_insert_with(|| {
                     stack.push(v); // clippy teach me this
                     u

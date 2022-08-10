@@ -107,7 +107,6 @@ impl<'a, G: Graph> Iterator for IddfsIter<'a, G> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::MakeGraph;
 
     #[test]

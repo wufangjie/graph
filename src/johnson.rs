@@ -1,13 +1,9 @@
-use crate::{Graph, VGraph, Weight, WeightedEdge};
+use crate::{Graph, VGraph};
 
 use std::collections::HashMap;
 
-pub fn johnson<W, E, G>(graph: &G) -> Vec<(Vec<Option<W>>, Vec<usize>)>
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+#[allow(clippy::type_complexity)]
+pub fn johnson<G: Graph>(graph: &G) -> Vec<(Vec<Option<G::Weight>>, Vec<usize>)> {
     let n = graph.len();
     let h = calc_h(graph).expect("Negative cycle found!");
 
@@ -15,29 +11,19 @@ where
     for u in 0..n {
         let mut map = HashMap::new();
         // no size hint, may a bit slower than using the special structure such as VGraph
-        for e in graph.iter_e_from(u) {
-            let v = e.to();
-            map.insert(v, e.weight() + h[u] - h[v]);
+        for (v, w) in graph.iter_e_from(u) {
+            map.insert(v, w + h[u] - h[v]);
         }
         lst.insert(u, map);
     }
 
     let g2 = VGraph::new(lst);
 
-    // for (u, dct) in self.e_lst.iter().enumerate() {
-    //     let mut map = HashMap::with_capacity(dct.len());
-    //     for (&v, &w) in dct {
-    //         map.insert(v, w + h[u] - h[v]);
-    //     }
-    //     e_lst.push(map);
-    // }
-
-    let mut res: Vec<(Vec<Option<W>>, Vec<usize>)> = Vec::with_capacity(n);
+    let mut res = Vec::with_capacity(n); // : Vec<(Vec<Option<W>>, Vec<usize>)>
     for i in 0..n {
         let mut dist = vec![None; n];
         let mut from = vec![i; n];
         for (d, u, v) in g2.dijkstra(i) {
-            //for (d, u, v) in DijkstraIter::new(&e_lst, i) {
             dist[u] = Some(d - h[i] + h[u]);
             from[u] = v;
         }
@@ -52,21 +38,14 @@ where
 /// 3. the if condition is much easier
 /// 4. the super vertex always have an edge to every vertex, so no use to use Option
 /// O(V(E+V)logV)
-fn calc_h<W, E, G>(graph: &G) -> Option<Vec<W>>
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+fn calc_h<G: Graph>(graph: &G) -> Option<Vec<G::Weight>> {
     let n = graph.len();
     let mut dist = vec![Default::default(); n];
 
     for _ in 0..n {
         let mut improved = false;
         for u in 0..n {
-            for e in graph.iter_e_from(u) {
-                let v = e.to();
-                let w = e.weight();
+            for (v, w) in graph.iter_e_from(u) {
                 if dist[u] + w < dist[v] {
                     dist[v] = dist[u] + w;
                     improved = true;

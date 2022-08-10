@@ -1,31 +1,31 @@
 /// this module implement three kind of edges
 use crate::Weight;
 
-pub trait Edge: Copy + std::fmt::Debug {
-    fn from(&self) -> usize;
-    fn to(&self) -> usize;
-    //fn weight(&self) -> W;
-}
+pub trait Edge<W: Weight>: Copy + std::fmt::Debug {
+    fn get_from(&self) -> usize;
+    fn get_to(&self) -> usize;
+    fn get_weight(&self) -> &W;
+    fn get_weight_mut(&mut self) -> &mut W;
 
-pub trait WeightedEdge<W: Weight>: Edge {
-    fn weight(&self) -> W;
 }
 
 /// most common edge: (from, to, weight) tuple
 // type WeightedEdge<W: Weight> = (usize, usize, W); // no bound needed
-impl<W: Weight> Edge for (usize, usize, W) {
-    fn from(&self) -> usize {
+impl<W: Weight> Edge<W> for (usize, usize, W) {
+    fn get_from(&self) -> usize {
         self.0
     }
 
-    fn to(&self) -> usize {
+    fn get_to(&self) -> usize {
         self.1
     }
-}
 
-impl<W: Weight> WeightedEdge<W> for (usize, usize, W) {
-    fn weight(&self) -> W {
-        self.2
+    fn get_weight(&self) -> &W {
+        &self.2
+    }
+
+    fn get_weight_mut(&mut self) -> &mut W {
+        &mut self.2
     }
 }
 
@@ -39,8 +39,8 @@ pub struct FlowEdge<W: Weight> {
 }
 
 impl<W: Weight> FlowEdge<W> {
-    pub fn new(from: usize, to: usize, flow: W) -> Self {
-	let cap = flow;
+    pub fn new(from: usize, to: usize, cap: W) -> Self {
+	let flow = Default::default();
         Self {
             from,
             to,
@@ -50,35 +50,39 @@ impl<W: Weight> FlowEdge<W> {
     }
 }
 
-impl<W: Weight> Edge for FlowEdge<W> {
-    fn from(&self) -> usize {
+impl<W: Weight> Edge<W> for FlowEdge<W> {
+    fn get_from(&self) -> usize {
         self.from
     }
 
-    fn to(&self) -> usize {
+    fn get_to(&self) -> usize {
         self.to
     }
-}
 
-impl<W: Weight> WeightedEdge<W> for FlowEdge<W> {
-    fn weight(&self) -> W {
-        self.flow
+    /// NOTE: it's is cap rather flow
+    fn get_weight(&self) -> &W {
+        &self.cap
     }
+
+    fn get_weight_mut(&mut self) -> &mut W {
+        &mut self.cap
+    }
+
 }
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub struct CostFlowEdge<C: Weight, W: Weight> {
-    from: usize,
-    to: usize,
-    cost: C,
-    cap: W,
-    flow: W,
+    pub(crate) from: usize,
+    pub(crate) to: usize,
+    pub(crate) cost: C,
+    pub(crate) cap: W,
+    pub(crate) flow: W,
 }
 
 impl<C: Weight, W: Weight> CostFlowEdge<C, W> {
-    pub fn new(from: usize, to: usize, cost: C, flow: W) -> Self {
-	let cap = flow;
+    pub fn new(from: usize, to: usize, cost: C, cap: W) -> Self {
+	let flow = Default::default();
         Self {
             from,
             to,
@@ -89,18 +93,21 @@ impl<C: Weight, W: Weight> CostFlowEdge<C, W> {
     }
 }
 
-impl<C: Weight, W: Weight> Edge for CostFlowEdge<C, W> {
-    fn from(&self) -> usize {
+impl<C: Weight, W: Weight> Edge<C> for CostFlowEdge<C, W> {
+    fn get_from(&self) -> usize {
         self.from
     }
 
-    fn to(&self) -> usize {
+    fn get_to(&self) -> usize {
         self.to
     }
-}
 
-impl<C: Weight, W: Weight> WeightedEdge<W> for CostFlowEdge<C, W> {
-    fn weight(&self) -> W {
-        self.flow
+    /// NOTE: CostFlowEdge only need to use cost to find shortest path
+    fn get_weight(&self) -> &C {
+        &self.cost
+    }
+
+    fn get_weight_mut(&mut self) -> &mut C {
+        &mut self.cost
     }
 }

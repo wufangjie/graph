@@ -20,6 +20,18 @@ pub trait Weight:
     fn is_zero(&self) -> bool {
         *self == Self::zero()
     }
+
+    fn is_positive(&self) -> bool {
+	*self > Self::zero()
+    }
+
+    fn is_negative(&self) -> bool {
+	*self < Self::zero()
+    }
+
+    fn min(self, other: Self) -> Self {
+	if self > other { other } else { self }
+    }
 }
 /// since we can not implement Add, Sub trait for ()
 /// I implement a zero sized type (i.e. NoWeight) by myself
@@ -47,6 +59,15 @@ impl Sub for NoWeight {
         self
     }
 }
+
+/// did not implement Neg implemented (u8, u16,...)
+// impl Neg for NoWeight {
+//     type Output = Self;
+
+//     fn neg(self) -> Self::Output {
+// 	self
+//     }
+// }
 
 impl AddAssign for NoWeight {
     fn add_assign(&mut self, _rhs: Self) {}

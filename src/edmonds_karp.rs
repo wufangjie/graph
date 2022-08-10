@@ -1,4 +1,4 @@
-use crate::{Graph, Weight, WeightedEdge};
+use crate::{Graph, Weight};
 use std::collections::{HashMap, VecDeque};
 
 /// O(VE^2) find an augmenting path cost E
@@ -8,39 +8,28 @@ use std::collections::{HashMap, VecDeque};
 /// https://www.zhihu.com/question/38281136/answer/88295342
 /// NOTE1: 对角线是（上下，左右）交替出现
 /// NOTE2: 所有边的方向都是 左->右 上->下
-pub fn edmonds_karp<W, E, G>(
+pub fn edmonds_karp<G: Graph>(
     graph: &G,
     start: usize,
     target: usize,
-) -> HashMap<usize, HashMap<usize, W>>
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
-    let mut matching = HashMap::new();
-    while edmonds_karp_augment(graph, &mut matching, start, target) {}
-    matching
+) -> HashMap<usize, HashMap<usize, G::Weight>> {
+    let mut flowing = HashMap::new();
+    while edmonds_karp_augment(graph, &mut flowing, start, target) {}
+    flowing
 }
 
-fn edmonds_karp_augment<W, E, G>(
+fn edmonds_karp_augment<G: Graph>(
     graph: &G,
-    matching: &mut HashMap<usize, HashMap<usize, W>>,
+    flowing: &mut HashMap<usize, HashMap<usize, G::Weight>>,
     start: usize,
     target: usize,
-) -> bool
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+) -> bool {
     // step1: find augmenting path
     let zero = Default::default();
     let mut queue = VecDeque::new(); // because we can not use inf
     let mut path: HashMap<usize, usize> = HashMap::new();
-    for e in graph.iter_e_from(start) {
-        let v = e.to();
-        let left = e.weight() - get_weight_in(matching, v, start);
+    for (v, w) in graph.iter_e_from(start) {
+        let left = w - get_weight_in(flowing, v, start);
         if left != zero {
             queue.push_back((v, left));
             path.insert(v, start);
@@ -49,19 +38,17 @@ where
     let mut w_add = zero;
 
     while let Some((u, w_max)) = queue.pop_front() {
-        for e in graph.iter_e_from(u) {
-            let v = e.to();
-            let w = e.weight();
+        for (v, w) in graph.iter_e_from(u) {
             if let std::collections::hash_map::Entry::Vacant(e) = path.entry(v) {
                 // clippy taught me this
                 //if !path.contains_key(&v) {
-                let left = w - get_weight_in(matching, v, u);
+                let left = w - get_weight_in(flowing, v, u);
                 if left != zero {
-                    queue.push_back((v, min(w_max, left)));
+                    queue.push_back((v, w_max.min(left)));
                     //path.insert(v, u);
                     e.insert(u);
                     if v == target {
-                        w_add = min(w_max, left);
+                        w_add = w_max.min(left);
                         break;
                     }
                 }
@@ -70,10 +57,10 @@ where
         if path.contains_key(&target) {
             break;
         }
-        if let Some(out) = matching.get(&u) {
+        if let Some(out) = flowing.get(&u) {
             for (&v, &w) in out.iter() {
                 path.entry(v).or_insert_with(|| {
-                    queue.push_back((v, min(w_max, w)));
+                    queue.push_back((v, w_max.min(w)));
                     u
                 });
             }
@@ -86,7 +73,7 @@ where
         while v != start {
             let u = *path.get(&v).unwrap();
 
-            let to_u = matching.entry(u).or_insert_with(HashMap::new);
+            let to_u = flowing.entry(u).or_insert_with(HashMap::new);
             if let Some(&w_v2u) = to_u.get(&v) {
                 if w_v2u == w_add {
                     to_u.remove(&v);
@@ -94,7 +81,7 @@ where
                     to_u.insert(v, w_add - w_v2u);
                 }
             } else {
-                let to_v = matching.entry(v).or_insert_with(HashMap::new);
+                let to_v = flowing.entry(v).or_insert_with(HashMap::new);
                 let u2v = to_v.entry(u).or_insert_with(Default::default);
                 *u2v += w_add;
             }
@@ -106,34 +93,14 @@ where
     }
 }
 
-// fn max<W: Weight>(x: W, y: W) -> W {
-//     if x > y {
-//         x
-//     } else {
-//         y
-//     }
-// }
-
-fn min<W: Weight>(x: W, y: W) -> W {
-    if x > y {
-        y
-    } else {
-        x
-    }
-}
-
-/// return value in matching[u][v]
-fn get_weight_in<W: Weight>(matching: &HashMap<usize, HashMap<usize, W>>, u: usize, v: usize) -> W {
-    let zero = Default::default();
-    if let Some(dct) = matching.get(&u) {
+/// return value in flowing[u][v]
+fn get_weight_in<W: Weight>(flowing: &HashMap<usize, HashMap<usize, W>>, u: usize, v: usize) -> W {
+    if let Some(dct) = flowing.get(&u) {
         if let Some(w) = dct.get(&v) {
-            *w
-        } else {
-            zero
+            return *w;
         }
-    } else {
-        zero
     }
+    Default::default()
 }
 
 #[cfg(test)]
@@ -144,7 +111,17 @@ mod tests {
     fn test_edmonds_karp() {
         let (g, s_lst) = MakeGraph::mf();
         let (s, t) = (0, 5);
-        let matching = g.edmonds_karp(s, t);
-        dbg!(&matching);
+        let flowing = g.edmonds_karp(s, t);
+        for (v, dct) in flowing.into_iter() {
+            print!("to {}:\tfrom: {{", s_lst[v]);
+            let process_tail = !dct.is_empty();
+            for (u, w) in dct.into_iter() {
+                print!(" {}: {},", s_lst[u], w);
+            }
+            if process_tail {
+                print!("\x08 ");
+            }
+            println!("}}");
+        }
     }
 }

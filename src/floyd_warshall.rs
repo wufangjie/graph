@@ -1,22 +1,18 @@
-use crate::{Graph, Weight, WeightedEdge};
+use crate::Graph;
 
 /// can not process negative cycle
 /// O(V^3)
 /// if W is float, we can use const INFINITY to speed up?
-pub fn floyd_warshall<W, E, G>(graph: &G) -> Vec<Vec<Option<W>>>
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+pub fn floyd_warshall<G: Graph>(graph: &G) -> Vec<Vec<Option<G::Weight>>> {
     let n = graph.len();
     let mut dist = vec![vec![None; n]; n];
     for (u, dist_u) in dist.iter_mut().enumerate() {
         dist_u[u] = Some(Default::default());
+        for (v, w) in graph.iter_e_from(u) {
+            dist_u[v] = Some(w);
+        }
     }
-    for e in graph.iter_e_all() {
-        dist[e.from()][e.to()] = Some(e.weight());
-    }
+
     for i in 0..n {
         for u in 0..n {
             if u == i {

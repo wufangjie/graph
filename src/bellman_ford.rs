@@ -1,16 +1,14 @@
-use crate::{Graph, Weight, WeightedEdge};
+use crate::Graph;
 
 /// return (no negative cycle?, dist, from)
 /// O(VE)
 /// The correctness of bellman ford: the count of edges of the shortestpath
 /// from one vertex to another is at most V - 1,
 /// and we need one more time to check if negative cycle exist
-pub fn bellman_ford<W, E, G>(graph: &G, start: usize) -> (bool, Vec<Option<W>>, Vec<usize>)
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+pub fn bellman_ford<G: Graph>(
+    graph: &G,
+    start: usize,
+) -> (bool, Vec<Option<G::Weight>>, Vec<usize>) {
     let n = graph.len();
 
     let mut dist = vec![None; n];
@@ -20,9 +18,7 @@ where
     for _ in 0..n {
         let mut improved = false;
         for u in 0..n {
-            for e in graph.iter_e_from(u) {
-                let v = e.to();
-                let w = e.weight();
+            for (v, w) in graph.iter_e_from(u) {
                 if let Some(d) = dist[u] {
                     let can_improve = match dist[v] {
                         None => true,

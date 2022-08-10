@@ -1,6 +1,6 @@
 /// this module provide some testing graphs for doing experiment
 use crate::{make_symbol_lst, make_vertices, make_vertices_rec};
-use crate::{EGraph, NoWeight, VGraph, FlowEdge};
+use crate::{NoWeight, VGraph};//, EGraph, FlowEdge, CostFlowEdge};
 use std::collections::HashMap;
 
 pub struct MakeGraph;
@@ -175,10 +175,11 @@ impl MakeGraph {
         (VGraph::new(lst), s_lst)
     }
 
-    pub fn mf() -> (EGraph<i32, FlowEdge<i32>>, Vec<&'static str>) {
+    pub fn mf() -> (VGraph<i32>, Vec<&'static str>) {
         make_vertices!(s, v1, v2, v3, v4, t);
 	let s_lst = make_symbol_lst!(s, v1, v2, v3, v4, t);
-        let e_lst = [
+	let mut lst = vec![HashMap::new(); s_lst.len()];
+        for (u, v, w) in [
 	    (s, v1, 16),
             (s, v2, 13),
             (v1, v3, 12),
@@ -188,8 +189,44 @@ impl MakeGraph {
             (v3, t, 20),
             (v4, v3, 7),
             (v4, t, 4)]
-	    .into_iter()
-    .map(|(u, v, w)| FlowEdge::new(u, v, w)).collect();
-	(EGraph::new(e_lst, s_lst.len()), s_lst)
+	    .into_iter() {
+		lst[u].insert(v, w);
+	    }
+	(VGraph::new(lst), s_lst)
+    }
+
+    #[allow(clippy::type_complexity)]
+    pub fn mcmf() -> (VGraph<i32>, Vec<&'static str>, HashMap<(usize, usize), i32>) {
+        make_vertices!(s, v1, v2, v3, v4, t);
+	let s_lst = make_symbol_lst!(s, v1, v2, v3, v4, t);
+	let mut lst = vec![HashMap::new(); s_lst.len()]; // cost graph
+        for (u, v, w) in [
+	    (s, v1, 3), // change 1 <-> 3 see what happened
+            (s, v2, 1),
+            (v1, v3, 1),
+            (v2, v1, 1),
+            (v2, v4, 1),
+            (v3, v2, 1),
+            (v3, t, 1),
+            (v4, v3, 1),
+            (v4, t, 1)]
+	    .into_iter() {
+		lst[u].insert(v, w);
+	    }
+	let mut cap_dct = HashMap::new();
+	for (u, v, w) in [
+	    (s, v1, 16),
+            (s, v2, 13),
+            (v1, v3, 12),
+            (v2, v1, 4),
+            (v2, v4, 14),
+            (v3, v2, 9),
+            (v3, t, 20),
+            (v4, v3, 7),
+            (v4, t, 4)]
+	    .into_iter() {
+		cap_dct.insert((u, v), w);
+	    }
+	(VGraph::new(lst), s_lst, cap_dct)
     }
 }

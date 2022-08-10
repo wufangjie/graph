@@ -1,45 +1,38 @@
-use crate::{Graph, Weight, WeightedEdge};
-
+use crate::Graph;
 use utils::Heap;
 
 /// the difference between dijstra and prim's algorithm:
 /// 1. dijstra need to specify a start vertex, while prim needn't
 /// 2. the weight push to the heap: d + w vs w
 /// 3. [NOT Algorithm] dijkstra works on directed graph, while prim on undirected graph
-pub fn a_star<W, E, G, F>(graph: &G, start: usize, func: F) -> AStarIter<W, E, G, F>
+pub fn a_star<G, F>(graph: &G, start: usize, func: F) -> AStarIter<G, F>
 where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-    F: Fn(usize) -> W,
+    G: Graph,
+    F: Fn(usize) -> G::Weight,
 {
     AStarIter::new(graph, start, func)
 }
 
-pub struct AStarIter<'a, W, E, G, F>
+pub struct AStarIter<'a, G, F>
 where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-    F: Fn(usize) -> W,
+    G: Graph,
+    F: Fn(usize) -> G::Weight,
 {
-    graph: &'a G, //Vec<HashMap<usize, W>>,
+    graph: &'a G,
     used: Vec<bool>,
-    heap: Heap<(W, usize, usize)>,
+    heap: Heap<(G::Weight, usize, usize)>,
     func: F,
 }
 
-impl<'a, W, E, G, F> AStarIter<'a, W, E, G, F>
+impl<'a, G, F> AStarIter<'a, G, F>
 where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-    F: Fn(usize) -> W,
+    G: Graph,
+    F: Fn(usize) -> G::Weight,
 {
     fn new(graph: &'a G, start: usize, func: F) -> Self {
         let mut heap = Heap::new();
-        for e in graph.iter_e_from(start) {
-            heap.push((e.weight() + func(e.to()), e.to(), start));
+        for (v, w) in graph.iter_e_from(start) {
+            heap.push((w + func(v), v, start));
         }
         let mut used = vec![false; graph.len()];
         used[start] = true;
@@ -52,23 +45,19 @@ where
     }
 }
 
-impl<'a, W, E, G, F> Iterator for AStarIter<'a, W, E, G, F>
+impl<'a, G, F> Iterator for AStarIter<'a, G, F>
 where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-    F: Fn(usize) -> W,
+    G: Graph,
+    F: Fn(usize) -> G::Weight,
 {
-    type Item = (W, usize, usize);
+    type Item = (G::Weight, usize, usize);
 
-    fn next(&mut self) -> Option<(W, usize, usize)> {
+    fn next(&mut self) -> Option<(G::Weight, usize, usize)> {
         while let Some((d, u, v)) = self.heap.pop() {
             if !self.used[u] {
                 self.used[u] = true;
                 let hu = (self.func)(u);
-                for e in self.graph.iter_e_from(u) {
-                    let w = e.weight();
-                    let v = e.to();
+                for (v, w) in self.graph.iter_e_from(u) {
                     self.heap.push((d + w - hu + (self.func)(v), v, u));
                 }
                 return Some((d - hu, u, v));

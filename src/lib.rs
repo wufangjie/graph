@@ -7,13 +7,15 @@ pub mod weight;
 pub use weight::{NoWeight, Weight};
 
 pub mod graph;
-pub use crate::graph::{EGraph, Graph, VGraph}; // ambiguously?
+pub use crate::graph::{Graph, VGraph}; // ambiguously?
 
 pub mod edge;
-pub use edge::{Edge, WeightedEdge, FlowEdge}; // two traits
+pub use edge::{Edge, FlowEdge, CostFlowEdge}; // two traits
 
 pub mod testing_graph;
 pub use testing_graph::MakeGraph;
+
+// following modules mainly used iter_v_from(u)
 
 pub mod bfs;
 
@@ -23,11 +25,13 @@ pub mod topo_sort;
 
 pub mod scc;
 
-pub mod kruskal;
+// following modules mainly used iter_e_from(u)
 
-pub mod prim;
+pub mod kruskal; // no reverse will be faster
 
-pub mod dijkstra;
+pub mod prim; // need reverse
+
+pub mod dijkstra; // shortest path all need reverse edges
 pub use dijkstra::DijkstraIter;
 
 pub mod a_star;
@@ -40,7 +44,7 @@ pub mod johnson;
 
 pub mod floyd_warshall;
 
-pub mod bipartite_match;
+pub mod bipartite_match; // also used is_empty_from(u)
 
 pub mod vertex_disjoint_path;
 
@@ -48,9 +52,10 @@ pub mod edge_disjoint_path;
 
 pub mod edmonds_karp;
 
+pub mod dinic_new;
 // pub mod dinic;
 
-
+pub mod mcmf;
 
 impl<W: Weight> VGraph<W> {
     pub fn bfs(&self, start: usize) -> impl Iterator<Item = usize> + '_ {
@@ -97,6 +102,10 @@ impl<W: Weight> VGraph<W> {
         bellman_ford::bellman_ford(self, start)
     }
 
+    pub fn spfa(&self, start: usize) -> (bool, Vec<Option<W>>, Vec<usize>) {
+	spfa::spfa(self, start)
+    }
+
     pub fn johnson(&self) -> Vec<(Vec<Option<W>>, Vec<usize>)> {
 	johnson::johnson(self)
     }
@@ -117,24 +126,24 @@ impl<W: Weight> VGraph<W> {
 	edge_disjoint_path::edge_disjoint_path(self, start, target)
     }
 
-}
-
-
-impl<W, E> EGraph<W, E>
-where
-    W: Weight,
-    E: WeightedEdge<W>
-{
-    pub fn kruskal(&self) -> Vec<(W, usize, usize)> {
-        kruskal::kruskal(self)
-    }
-
-    // TODO: add other impls
     pub fn edmonds_karp(&self, start: usize, target: usize) -> HashMap<usize, HashMap<usize, W>> {
 	edmonds_karp::edmonds_karp(self, start, target)
     }
 
-    // pub fn dinic(&self, start: usize, target: usize) -> W {
-    // 	dinic::dinic(self, start, target)
-    // }
 }
+
+
+// impl<W, E> EGraph<W, E>
+// where
+//     W: Weight,
+//     E: WeightedEdge<W>
+// {
+//     pub fn kruskal(&self) -> Vec<(W, usize, usize)> {
+//         kruskal::kruskal(self)
+//     }
+
+//     // TODO: add other impls
+//     pub fn edmonds_karp(&self, start: usize, target: usize) -> HashMap<usize, HashMap<usize, W>> {
+// 	edmonds_karp::edmonds_karp(self, start, target)
+//     }
+// }

@@ -1,4 +1,4 @@
-use crate::{Graph, Weight, WeightedEdge};
+use crate::Graph;
 use std::collections::VecDeque;
 
 const SENTINEL: usize = usize::MAX;
@@ -18,12 +18,7 @@ const SENTINEL: usize = usize::MAX;
 ///    4: update its one neighbour `v` before sentinel (v get a level i+1 distance, after v outqueue, we may achieve more deeper level)
 /// NOTE: if we use priorityqueue (distance), sentinel will not work
 
-pub fn spfa<W, E, G>(graph: &G, start: usize) -> (bool, Vec<Option<W>>, Vec<usize>)
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+pub fn spfa<G: Graph>(graph: &G, start: usize) -> (bool, Vec<Option<G::Weight>>, Vec<usize>) {
     let n = graph.len();
     let mut dist = vec![None; n];
     dist[start] = Some(Default::default());
@@ -49,9 +44,7 @@ where
         } else {
             is_in_queue[u] = false;
             let du = dist[u].unwrap();
-            for e in graph.iter_e_from(u) {
-                let v = e.to();
-                let w = e.weight();
+            for (v, w) in graph.iter_e_from(u) {
                 if dist[v].is_none() || du + w < dist[v].unwrap() {
                     from[v] = u;
                     dist[v] = Some(du + w);

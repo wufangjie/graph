@@ -1,34 +1,24 @@
-use crate::{Graph, Weight, WeightedEdge};
+use crate::Graph;
 use std::collections::{HashMap, HashSet};
 
 /// you can get the count of edge disjoint path by: matching[t].len()
 /// you also can get one paths solution: see #[test]
-pub fn edge_disjoint_path<W, E, G>(
+pub fn edge_disjoint_path<G: Graph>(
     graph: &G,
     start: usize,
     target: usize,
-) -> HashMap<usize, HashSet<usize>>
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+) -> HashMap<usize, HashSet<usize>> {
     let mut matching = HashMap::new();
     while edge_disjoint_augment(graph, &mut matching, start, target) {}
     matching
 }
 
-fn edge_disjoint_augment<W, E, G>(
+fn edge_disjoint_augment<G: Graph>(
     graph: &G,
     matching: &mut HashMap<usize, HashSet<usize>>,
     start: usize,
     target: usize,
-) -> bool
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+) -> bool {
     // step1: find augmenting path
     let mut stack = vec![start];
     let mut path = HashMap::new();
@@ -86,21 +76,17 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::MakeGraph;
-
 
     #[test]
     fn test_edge_disjoint_path() {
         let (g, s_lst) = MakeGraph::dp();
         let (s, t) = (0, 6);
         let matching = g.edge_disjoint_path(s, t);
-        dbg!(&matching);
+        // dbg!(&matching);
 
         if !matching.is_empty() {
-            let mut used = HashSet::new();
-            // let ti = t.get_index();
-            // let si = s.get_index();
+            let mut used = std::collections::HashSet::new();
             for &v in matching.get(&t).unwrap() {
                 let mut res = vec![s_lst[t], s_lst[v]];
                 let mut v = v;

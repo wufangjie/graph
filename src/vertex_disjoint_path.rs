@@ -1,38 +1,28 @@
-use crate::{Graph, Weight, WeightedEdge};
+use crate::Graph;
 use std::collections::HashMap;
 
 /// you can get the count of vertex disjoint path using: last_but_t.len()
 /// you can get one paths solution:
 /// 1. last_but_t keeps all vertice directly to t
 /// 2. matching keeps all sub paths (backward, (k, v) in it means edge v -> k)
-pub fn vertex_disjoint_path<W, E, G>(
+pub fn vertex_disjoint_path<G: Graph>(
     graph: &G,
     start: usize,
     target: usize,
-) -> (HashMap<usize, usize>, Vec<usize>)
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+) -> (HashMap<usize, usize>, Vec<usize>) {
     let mut matching = HashMap::new();
     let mut last_but_t = vec![];
     while vertex_disjoint_augment(graph, &mut matching, &mut last_but_t, start, target) {}
     (matching, last_but_t)
 }
 
-fn vertex_disjoint_augment<W, E, G>(
+fn vertex_disjoint_augment<G: Graph>(
     graph: &G,
     matching: &mut HashMap<usize, usize>,
     last_but_t: &mut Vec<usize>,
     start: usize,
     target: usize,
-) -> bool
-where
-    W: Weight,
-    E: WeightedEdge<W>,
-    G: Graph<Edge = E>,
-{
+) -> bool {
     // step1: find augmenting path
     let mut stack = vec![start];
     let mut path = HashMap::new();
@@ -88,7 +78,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::MakeGraph;
 
     #[test]
@@ -97,8 +86,8 @@ mod tests {
 
         let (s, t) = (0, 6);
         let (matching, last_but_t) = g.vertex_disjoint_path(s, t);
-        dbg!(&last_but_t);
-        dbg!(&matching);
+        // dbg!(&last_but_t);
+        // dbg!(&matching);
 
         for mut i in last_but_t {
             let mut res = vec![s_lst[t]];
