@@ -40,7 +40,8 @@ pub fn topo_sort_rc<G: Graph>(graph: &G) -> Vec<usize> {
 /// cycle: this implement can processs graph which are not DAG (without dead loop)
 /// this implement only promise: **at least one vertex** in scc occur after all scc's out degrees
 /// this stack version implement, vertex may in stack multiple times
-/// before popping, those vertices in stack just the same as those not processsed loop (dfs)
+/// before first popping, those vertices in stack just the same as those not processsed loop (dfs)
+/// after first popping, we can not push the same vertex (because we have set visited[i] to 1), then we can get the second popping just the same place as first popping
 pub fn topo_sort_dfs<G: Graph>(graph: &G) -> Vec<usize> {
     let n = graph.len();
     let mut stack = vec![0];
@@ -50,7 +51,7 @@ pub fn topo_sort_dfs<G: Graph>(graph: &G) -> Vec<usize> {
 
     loop {
         if let Some(u) = stack.pop() {
-            if visited[u] < 2 {
+	    if visited[u] < 2 {
                 visited[u] += 1;
                 if visited[u] == 2 {
                     res.push(u);
@@ -63,6 +64,20 @@ pub fn topo_sort_dfs<G: Graph>(graph: &G) -> Vec<usize> {
                     }
                 }
             }
+
+	    // another implemention: use milestone
+            // if u == usize::MAX {
+            //     res.push(stack.pop().unwrap());
+            // } else if visited[u] == 0 {
+            //     visited[u] = 1;
+            //     stack.push(u);
+            //     stack.push(usize::MAX); // add a milestone, count <= n
+            //     for v in graph.iter_v_from(u) {
+            //         if visited[v] == 0 {
+            //             stack.push(v);
+            //         }
+            //     }
+            // }
         } else if res.len() == n {
             return res;
         } else {
