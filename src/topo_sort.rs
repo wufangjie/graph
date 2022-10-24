@@ -44,8 +44,8 @@ pub fn topo_sort_rc<G: Graph>(graph: &G) -> Vec<usize> {
 pub fn topo_sort_dfs<G: Graph>(graph: &G) -> Vec<usize> {
     let n = graph.len();
     let mut stack = vec![0];
-    let mut visited = vec![0; n];
-    let mut index = 1;
+    let mut visited = vec![0u8; n];
+    let mut index = 1; // next possible start vertex
     let mut res = Vec::with_capacity(n);
 
     loop {
